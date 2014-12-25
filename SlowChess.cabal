@@ -1,0 +1,40 @@
+name:                  slowchess
+version:               0.1.0.0
+category:              Game
+synopsis:              A chess engine.
+description:
+  A chess engine in Haskell, with no great emphasis on anything.
+license:               MIT
+license-file:          LICENSE
+author:                Isaac Azuelos
+maintainer:            isaac@azuelos.ca
+stability:             nope
+
+cabal-version:         >=1.20
+build-type:            Simple
+extra-source-files:    README.md
+
+source-repository head
+  type:                git
+  location:            https://github.com/isaacazuelos/SlowChess.git
+
+library
+  hs-source-dirs:      src/
+  default-language:    Haskell2010
+  exposed-modules:
+    Game.SlowChess.Board
+    Game.SlowChess.Mask
+    Game.SlowChess.Pretty
+  build-depends:
+    base >= 4.7 && < 4.8
+
+executable slowchess
+  main-is:             Main.hs
+  hs-source-dirs:      cli
+  default-language:    Haskell2010
+  ghc-options:         -Wall
+  other-modules:
+  build-depends:
+    slowchess,
+    base >= 4.7 && < 4.8    
+    
