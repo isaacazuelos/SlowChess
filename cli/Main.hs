@@ -4,4 +4,5 @@ import           Game.SlowChess.Board
 import           Game.SlowChess.Pretty
 
 main :: IO ()
-main = putStrLn $ pretty blank
+main = do putStrLn "This is what a starting board looks like: "
+          putStrLn $ pretty starting

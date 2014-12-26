@@ -23,8 +23,8 @@ data Board = Board { white :: Side
 -- different types of pieces belonging to that side.
 data Side  = Side { pawns   :: Mask
                   , rooks   :: Mask
-                  , bishops :: Mask
                   , knights :: Mask
+                  , bishops :: Mask
                   , kings   :: Mask
                   , queens  :: Mask
                   } deriving (Show, Eq)
@@ -34,3 +34,21 @@ blank :: Board
 blank = Board { white = Side 0 0 0 0 0 0
               , black = Side 0 0 0 0 0 0
               }
+
+-- | A board with the pieces in their starting positions.
+starting :: Board
+starting = Board { black = Side { pawns   = fromList [48..55]
+                                , rooks   = fromList [56,63]
+                                , knights = fromList [57,62]
+                                , bishops = fromList [58,61]
+                                , kings   = fromList [59]
+                                , queens  = fromList [60]
+                                }
+                 , white = Side { pawns   = fromList [8..15]
+                                , rooks   = fromList [0,7]
+                                , knights = fromList [1,6]
+                                , bishops = fromList [2,5]
+                                , kings   = fromList [4]
+                                , queens  = fromList [3]
+                                }
+                 }
