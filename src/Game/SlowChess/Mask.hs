@@ -2,7 +2,7 @@
 
 -- |
 -- Module      : Game.SlowChess.Mask
--- Description : Board Representation
+-- Description : Piece layout masks and movements.
 -- License     : MIT License
 -- Maintainer  : Isaac Azuelos
 --

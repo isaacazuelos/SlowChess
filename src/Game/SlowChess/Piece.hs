@@ -1,6 +1,6 @@
 -- |
 -- Module      : Game.SlowChess.Piece
--- Description : Board Representation
+-- Description : Piece types and other chess jargon.
 -- License     : MIT License
 -- Maintainer  : Isaac Azuelos
 --

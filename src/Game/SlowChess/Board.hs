@@ -1,6 +1,6 @@
 -- |
 -- Module      : Game.SlowChess.Board
--- Description : Board Representation
+-- Description : Board representation.
 -- License     : MIT License
 -- Maintainer  : Isaac Azuelos
 --
