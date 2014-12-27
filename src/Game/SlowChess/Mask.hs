@@ -15,6 +15,8 @@ module Game.SlowChess.Mask (
                              Mask (Mask)
                            , fromList
                            , toList
+                           , both
+                           , minus
                            ) where
 
 import           Data.Bits
@@ -45,11 +47,9 @@ newtype Mask = Mask Word64 deriving (Show, Eq, Bits, Num)
 -- | Masks form a monoid where the identity is an empty mask and our operation
 -- preserves the occupied spaces of both operands.
 --
--- @
---   1 0 0    1 0 0   1 0 0
---   0 1 0 <> 1 0 0 = 1 1 0
---   0 0 1    1 0 0   1 0 1
--- @
+-- > 1 0 0    1 0 0   1 0 0
+-- > 0 1 0 <> 1 0 0 = 1 1 0
+-- > 0 0 1    1 0 0   1 0 1
 instance Monoid Mask where
   mempty  = 0
   mappend = (.|.)
@@ -77,3 +77,15 @@ fromList = foldl (\ m i -> m <> maskFromIndex i) mempty
 -- @fromList . toList = toList . fromList = id@
 toList :: Mask -> [Int]
 toList m = filter (\i -> mempty /= m .&. maskFromIndex i) [0..63]
+
+-- | All the squares which are occupied on exactly both of the inputs.
+both :: Mask -> Mask -> Mask
+both = (.&.)
+
+-- | Unmark all the position in the first mask that are held by the second.
+--
+-- > 1 0 1         1 1 0   0 0 1
+-- > 0 1 0 `minus` 1 1 0 = 0 0 0
+-- > 1 0 1         0 0 0   1 0 1
+minus :: Mask -> Mask -> Mask
+minus a b = a .&. complement b

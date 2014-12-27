@@ -4,13 +4,13 @@
 -- License     : MIT License
 -- Maintainer  : Isaac Azuelos
 --
--- Pretty is a tool for pretty printing the chess-related data types — things
--- like boards, masks, and fancy Unicode representations of the piece types.
+-- Pretty is a tool for pretty printing the chess-related data types.
 --
 -- Only instances are exported.
 
 module Game.SlowChess.Pretty where
 
+import           Data.Bits            ((.&.))
 import           Data.List            (intersperse, sort)
 
 import           Game.SlowChess.Board
@@ -43,34 +43,19 @@ instance Pretty Mask where
 -- chess pieces to show which piece occupies a square.
 instance Pretty Board where
   pretty b = buildBoard (concat
-               [ fromMask "♜" $ (rooks   . black) b
-               , fromMask "♞" $ (knights . black) b
-               , fromMask "♝" $ (bishops . black) b
-               , fromMask "♛" $ (queens  . black) b
-               , fromMask "♚" $ (kings   . black) b
-               , fromMask "♟" $ (pawns   . black) b
-               , fromMask "♖" $ (rooks   . white) b
-               , fromMask "♘" $ (knights . white) b
-               , fromMask "♗" $ (bishops . white) b
-               , fromMask "♕" $ (queens  . white) b
-               , fromMask "♔" $ (kings   . white) b
-               , fromMask "♙" $ (pawns   . white) b
+               [ fromMask "♜" $ get Black Rook   b
+               , fromMask "♞" $ get Black Knight b
+               , fromMask "♝" $ get Black Bishop b
+               , fromMask "♛" $ get Black Queen  b
+               , fromMask "♚" $ get Black King   b
+               , fromMask "♟" $ get Black Pawn   b
+               , fromMask "♖" $ get White Rook   b
+               , fromMask "♘" $ get White Knight b
+               , fromMask "♗" $ get White Bishop b
+               , fromMask "♕" $ get White Queen  b
+               , fromMask "♔" $ get White King   b
+               , fromMask "♙" $ get White Pawn   b
                ])
-
--- | Pieces are prettified using their Unicode representation.
-instance Pretty Piece where
-  pretty (Rook   Black) = "♜"
-  pretty (Knight Black) = "♞"
-  pretty (Bishop Black) = "♝"
-  pretty (Queen  Black) = "♛"
-  pretty (King   Black) = "♚"
-  pretty (Pawn   Black) = "♟"
-  pretty (Rook   White) = "♖"
-  pretty (Knight White) = "♘"
-  pretty (Bishop White) = "♗"
-  pretty (Queen  White) = "♕"
-  pretty (King   White) = "♔"
-  pretty (Pawn   White) = "♙"
 
 -- | A tile is a board index followed by the string we'll use to represent
 -- what is occupying that index.
@@ -98,7 +83,7 @@ buildBoard ts = unlines (rows ++ columnLegend)
 -- | When the integer argument is @n@, it splits a list into pieces of length
 -- @n@. The last piece will be shorter if @n@ does not evenly divide the
 -- length of the list. When @n == 0@, it creates an infinite list of empty
--- lists. 
+-- lists.
 chunks :: Int -> [a] -> [[a]]
 chunks n xs = chunks' n xs []
   where chunks' _ [] acc = acc

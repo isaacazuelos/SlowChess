@@ -12,11 +12,16 @@ module Game.SlowChess.Piece where
 -- are not equal.
 data Colour = White | Black deriving (Show, Eq)
 
--- | There are different kinds of pieces on a chess board, which are coloured.
-data Piece = Rook   Colour
-           | Knight Colour
-           | Bishop Colour
-           | Queen  Colour
-           | King   Colour
-           | Pawn   Colour
+-- | Return the enemy of a colour, i.e. the other colour.
+enemy :: Colour -> Colour
+enemy White = Black
+enemy Black = White
+
+-- | There are different kinds of pieces on a chess board. While pieces have a colour, it
+data Piece = Rook
+           | Knight
+           | Bishop
+           | Queen
+           | King
+           | Pawn
              deriving (Show, Eq)

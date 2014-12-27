@@ -24,6 +24,7 @@ library
   exposed-modules:
     Game.SlowChess.Board
     Game.SlowChess.Mask
+    Game.SlowChess.Piece
     Game.SlowChess.Pretty
   build-depends:
     base >= 4.7 && < 4.8
