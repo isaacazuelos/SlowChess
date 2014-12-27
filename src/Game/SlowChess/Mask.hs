@@ -10,42 +10,45 @@
 -- on a board. Masks can move these squares around in certain directions, and
 -- handle reasonable queries about the board.
 
-module Game.SlowChess.Mask (
-                             -- * Constructing Masks
+module Game.SlowChess.Mask ( -- * Constructing Masks
                              Mask (Mask)
                            , fromList
                            , toList
                            , both
                            , minus
+                             -- * Movement
+                           , moveable
+                           , hop
                            ) where
 
 import           Data.Bits
+import           Data.List            ((\\))
 import           Data.Monoid
 import           Data.Word
 
--- | A Mask is just using the 64 bits of a machine word to indicate which of
--- the 64 squares on a chess board are being used. This is used both to track
--- the squares being reasoned about, and also to track the positions of types
--- of pieces in a game.
+import           Game.SlowChess.Piece
+
+-- A Mask uses the 64 bits of a machine word to indicate which of the 64
+-- squares on a chess board are being used.
+
+-- | This is used both to track the squares being reasoned about, and also to
+-- track the positions of types of pieces in a game. The squares are numbered
+-- according to the board below.
 --
--- Below is the mapping of bits to the squares of the board, in the board's
--- coordinates.
---
--- @
---     8 56 57 58 59 60 61 62 63
---     7 48 49 50 51 52 53 54 55
---     6 40 41 42 43 44 45 46 47
---     5 32 33 34 35 36 37 38 39
---     4 24 25 26 27 28 29 30 31
---     3 16 17 18 19 20 21 22 23
---     2 08 09 10 11 12 13 14 15
---     1 00 01 02 03 04 05 06 07
---       a  b  c  d  e  f  g  h
--- @
-newtype Mask = Mask Word64 deriving (Show, Eq, Bits, Num)
+-- >    8 56 57 58 59 60 61 62 63
+-- >    7 48 49 50 51 52 53 54 55
+-- >    6 40 41 42 43 44 45 46 47
+-- >    5 32 33 34 35 36 37 38 39
+-- >    4 24 25 26 27 28 29 30 31
+-- >    3 16 17 18 19 20 21 22 23
+-- >    2 08 09 10 11 12 13 14 15
+-- >    1 00 01 02 03 04 05 06 07
+-- >      a  b  c  d  e  f  g  h
+newtype Mask = Mask Word64 deriving ( Show, Eq, Bits, Num)
 
 -- | Masks form a monoid where the identity is an empty mask and our operation
--- preserves the occupied spaces of both operands.
+-- preserves the occupied spaces of both operands. Note that this monoid is
+-- commutative (and associative.)
 --
 -- > 1 0 0    1 0 0   1 0 0
 -- > 0 1 0 <> 1 0 0 = 1 1 0
@@ -70,7 +73,7 @@ maskFromIndex i = if (i >= 0) && (i < 64)
 -- > fromList [0,4,8] = 0 1 0
 -- >                    0 0 1
 fromList :: [Int] -> Mask
-fromList = foldl (\ m i -> m <> maskFromIndex i) mempty
+fromList = foldr ((<>) . maskFromIndex) mempty
 
 -- | Build a list of square indicies from a mask.
 --
@@ -89,3 +92,37 @@ both = (.&.)
 -- > 1 0 1         0 0 0   1 0 1
 minus :: Mask -> Mask -> Mask
 minus a b = a .&. complement b
+
+-- Movement
+-- --------
+
+-- The basic motions are done through shifts. Since these shifts *could* cause
+-- certain positions to wrap around, we need to bitwise 'and' the board to be
+-- moved with a mask that indicates which positions *can* be moved in that
+-- direction.
+
+-- | The pieces indicated by a mask can only move in a direction if doing so
+-- would not cause the piece to move off the board. @'canMove dir mask'@
+-- removes any positions in @mask@ which could not move in the direction
+-- @dir@.
+moveable :: Direction -> Mask -> Mask
+moveable (Rank Down) m = m .&. fromList [8..63]
+moveable (Rank Up)   m = m .&. fromList [0..55]
+moveable (File Down) m = m .&. fromList ([0..63] \\ [0,8,16,24,32,40,48,56])
+moveable (File Up)   m = m .&. fromList ([0..63] \\ [7,15,23,31,39,47,55,63])
+
+-- |  Hop moves the pieces of a mask in the specified direction.
+--
+-- The positions indicated by a mask can move up or down their ranks or
+-- files — more complicated movement can be constructed as the composition of
+-- these basic motions.
+--
+-- The pieces indicated by a mask can only move in a direction if doing so
+-- would not cause the piece to move off the board, so it holds that:
+--
+-- > hop d m == hop d (moveable d m)
+hop :: Direction -> Mask -> Mask
+hop d@(Rank Down) = (`shiftR` 8) . moveable d
+hop d@(Rank Up)   = (`shiftL` 8) . moveable d
+hop d@(File Down) = (`shiftR` 1) . moveable d
+hop d@(File Up)   = (`shiftL` 1) . moveable d
