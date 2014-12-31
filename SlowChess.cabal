@@ -10,7 +10,7 @@ author:                Isaac Azuelos
 maintainer:            isaac@azuelos.ca
 stability:             nope
 
-cabal-version:         >=1.20
+cabal-version:         >= 1.18
 build-type:            Simple
 extra-source-files:    README.md
 
@@ -24,6 +24,7 @@ library
   exposed-modules:
     Game.SlowChess.Board
     Game.SlowChess.Mask
+    Game.SlowChess.Movement
     Game.SlowChess.Piece
     Game.SlowChess.Pretty
   build-depends:

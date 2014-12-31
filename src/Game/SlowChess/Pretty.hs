@@ -8,7 +8,7 @@
 --
 -- Only instances are exported.
 
-module Game.SlowChess.Pretty where
+module Game.SlowChess.Pretty (Pretty) where
 
 import           Data.Bits            ((.&.))
 import           Data.List            (intersperse, sort)
@@ -42,20 +42,22 @@ instance Pretty Mask where
 -- | Boards are prettied like masks, but with the Unicode characters for the
 -- chess pieces to show which piece occupies a square.
 instance Pretty Board where
-  pretty b = buildBoard (concat
-               [ fromMask "♜" $ get Black Rook   b
-               , fromMask "♞" $ get Black Knight b
-               , fromMask "♝" $ get Black Bishop b
-               , fromMask "♛" $ get Black Queen  b
-               , fromMask "♚" $ get Black King   b
-               , fromMask "♟" $ get Black Pawn   b
-               , fromMask "♖" $ get White Rook   b
-               , fromMask "♘" $ get White Knight b
-               , fromMask "♗" $ get White Bishop b
-               , fromMask "♕" $ get White Queen  b
-               , fromMask "♔" $ get White King   b
-               , fromMask "♙" $ get White Pawn   b
-               ])
+  pretty b = if conflicts b /= 0
+               then "Invalid Board."
+               else buildBoard (concat
+                                [ fromMask "♜" $ get Black Rook   b
+                                , fromMask "♞" $ get Black Knight b
+                                , fromMask "♝" $ get Black Bishop b
+                                , fromMask "♛" $ get Black Queen  b
+                                , fromMask "♚" $ get Black King   b
+                                , fromMask "♟" $ get Black Pawn   b
+                                , fromMask "♖" $ get White Rook   b
+                                , fromMask "♘" $ get White Knight b
+                                , fromMask "♗" $ get White Bishop b
+                                , fromMask "♕" $ get White Queen  b
+                                , fromMask "♔" $ get White King   b
+                                , fromMask "♙" $ get White Pawn   b
+                                ])
 
 -- | A tile is a board index followed by the string we'll use to represent
 -- what is occupying that index.

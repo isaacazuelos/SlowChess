@@ -19,6 +19,11 @@ TODO
 * Profiling — One of purposes of this project is to demystify Haskell
   performance.
 
+### To Fix
+
+* Extend the documentation for `Game.SlowChess.Movement.movePawn` with links
+  to where special pawn movement is documented.
+
 ### Things to fix when I have an internet connection again:
 
 * Look up how to fix the documentation in `Game.SlowChess.Mask` for movement.
