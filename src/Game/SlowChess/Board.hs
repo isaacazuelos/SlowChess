@@ -17,8 +17,8 @@ module Game.SlowChess.Board {-
                             )
                             -} where
 
+import           Data.Bits            (complement, xor)
 import           Data.Monoid          ((<>))
-import           Data.Bits            (xor)
 
 import           Game.SlowChess.Mask
 import           Game.SlowChess.Piece
@@ -42,6 +42,10 @@ data Board = Board { pawns   :: Mask
 material :: Colour -> Board -> Mask
 material White = whites
 material Black = blacks
+
+-- | All of the empty squares on the board.
+blanks :: Board -> Mask
+blanks b = complement ((material White b) <> (material Black b))
 
 -- | A blank board is the board with no pieces on it.
 blank :: Board

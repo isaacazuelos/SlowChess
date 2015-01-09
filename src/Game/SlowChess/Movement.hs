@@ -23,7 +23,7 @@
 
 module Game.SlowChess.Movement {-
                                ( -- * Move
-                                 moves
+                                 moveGen
                                  -- * Piece-specific Movements
                                , moveRooks
                                , moveKnights
@@ -35,27 +35,31 @@ module Game.SlowChess.Movement {-
                                , move
                                ) -} where
 
-import           Game.SlowChess.Mask
+import           Data.Monoid           ((<>))
+
 import           Game.SlowChess.Board
+import           Game.SlowChess.Mask
 import           Game.SlowChess.Piece
+
+import           Game.SlowChess.Pretty (pprint) -- debugging
 
 -- | Generates all the non-special movements that the pieces of a colour can
 -- make.
-moves :: Colour -> Board -> [Board]
-moves c b = concat [ moveRooks   c b
-                   , moveKnights c b
-                   , moveBishops c b
-                   , moveQueens  c b
-                   , moveKings   c b
-                   , movePawns   c b
-                   ]
+moveGen :: Colour -> Board -> [Board]
+moveGen c b = concat [ moveRooks   c b
+                     , moveKnights c b
+                     , moveBishops c b
+                     , moveQueens  c b
+                     , moveKings   c b
+                     , movePawns   c b
+                     ]
 
 -- | Generates all the valid boards which follow from movements of the rooks
 -- of a colour on a board.  Rooks move out in straight lines along their rank
 -- or file until they choose to stop, further motion would mean stepping on a
 -- friendly unit, or the last step taken removed an enemy unit.
 moveRooks :: Colour -> Board -> [Board]
-moveRooks = undefined
+moveRooks c b = [N,S,E,W] >>= (\ d -> cast c Rook d b)
 
 -- | Generates all the valid movements of the knights of a colour on a board.
 -- Knights are capable of moving to their target squares regardless of other
@@ -82,7 +86,8 @@ moveQueens = undefined
 -- board. Kings can move like queens, only they take at most 1 step in any
 -- direction.
 moveKings :: Colour -> Board -> [Board]
-moveKings = undefined
+moveKings c b = allDirections >>= (hops c King b nonFriendly) 
+  where nonFriendly b' = (material (enemy c) b') <> (blanks b')
 
 -- | Generates *some* the valid movements of the pawns of a colour on a board.
 -- Pawn motion is the most complicated. Below are the rules governing pawn
@@ -104,8 +109,35 @@ movePawns :: Colour -> Board -> [Board]
 movePawns = undefined
 
 -- * General Movements
+--
+-- Separating the computing of the moves and captures lets us reuse the same
+-- functions to build both the king-like and queen-like versions of the
+-- motion — exploiting the list monad.
 
--- | Move all pieces of a kind and colour in a direction by a single square.
-move :: Direction -> Colour -> Piece -> Board -> Board
-move d c p b = set c p b (hop d (get c p b))
+-- | Takes a sort of 'predicate' that returns a mask of all the places on the
+-- board where movement could be valid. This would typically either pick out
+-- the blank squares, or enemy-occupied squares. The predicate isn't just
+-- /always/ the squares not occupied by friendly units since we want to be
+-- able to build up a recursive movement on blank squares for the queen, rook,
+-- and bishop movements.
+hoppers :: Colour -> Piece -> Direction -> Board -> (Board -> Mask) -> Mask
+hoppers c p d b f = both (hop (rev d) (f b)) (get c p b) 
 
+-- | Move all the pieces on the board of a type and colour limited to the ones
+-- in the mask by the direction. 
+applyHops :: Colour -> Piece -> Board -> Direction -> Mask -> [Board]
+applyHops c p b d m = map move (split m)
+  where move m' = set c p b (((get c p b) `minus` m') <> hop d m')
+
+-- | Hops all the pieces indicated by the 'predicate' mask function in the
+-- specified direction.
+hops :: Colour -> Piece -> Board -> (Board -> Mask) -> Direction -> [Board]
+hops c p b f d = applyHops c p b d (hoppers c p d b f)
+
+-- | Moves a piece along blank squares until it collides with an enemy
+-- piece. This is the type of movement that's used by rooks, bishops, and
+-- queens.
+cast :: Colour -> Piece -> Direction -> Board -> [Board]
+cast c p d b = (hops c p b caps d) ++ moves ++ (moves >>= cast c p d)
+  where caps = material (enemy c)
+        moves = (hops c p b blanks d)

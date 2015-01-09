@@ -16,6 +16,7 @@ module Game.SlowChess.Mask ( -- * Constructing Masks
                            , toList
                            , both
                            , minus
+                           , split
                              -- * Movement
                            , moveable
                            , hop
@@ -93,6 +94,11 @@ both = (.&.)
 minus :: Mask -> Mask -> Mask
 minus a b = a .&. complement b
 
+-- | Split a mask with multiple pieces into a list of masks with one position
+-- occupied each.
+split :: Mask -> [Mask]
+split = map maskFromIndex . toList
+
 -- Movement
 -- --------
 
@@ -106,10 +112,14 @@ minus a b = a .&. complement b
 -- removes any positions in @mask@ which could not move in the direction
 -- @dir@.
 moveable :: Direction -> Mask -> Mask
-moveable (Rank Down) m = m .&. fromList [8..63]
-moveable (Rank Up)   m = m .&. fromList [0..55]
-moveable (File Down) m = m .&. fromList ([0..63] \\ [0,8,16,24,32,40,48,56])
-moveable (File Up)   m = m .&. fromList ([0..63] \\ [7,15,23,31,39,47,55,63])
+moveable N  = (.&.) $ fromList [0..55]
+moveable NE = moveable N . moveable E
+moveable E  = (.&.) $ fromList ([0..63] \\ [7,15,23,31,39,47,55,63])
+moveable SE = moveable S . moveable E
+moveable S  = (.&.) $ fromList [8..63]
+moveable SW = moveable S . moveable E
+moveable W  = (.&.) $ fromList ([0..63] \\ [0,8,16,24,32,40,48,56])
+moveable NW = moveable N . moveable W
 
 -- |  Hop moves the pieces of a mask in the specified direction.
 --
@@ -122,7 +132,11 @@ moveable (File Up)   m = m .&. fromList ([0..63] \\ [7,15,23,31,39,47,55,63])
 --
 -- > hop d m == hop d (moveable d m)
 hop :: Direction -> Mask -> Mask
-hop d@(Rank Down) = (`shiftR` 8) . moveable d
-hop d@(Rank Up)   = (`shiftL` 8) . moveable d
-hop d@(File Down) = (`shiftR` 1) . moveable d
-hop d@(File Up)   = (`shiftL` 1) . moveable d
+hop N  = (`shiftL` 8) . moveable N
+hop NE = hop N . hop E
+hop E  = (`shiftL` 1) . moveable E
+hop SE = hop S . hop E
+hop S  = (`shiftR` 8) . moveable S
+hop SW = hop S . hop W
+hop W  = (`shiftR` 1) . moveable W
+hop NW = hop N . hop W

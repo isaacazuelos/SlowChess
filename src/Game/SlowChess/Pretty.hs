@@ -8,9 +8,8 @@
 --
 -- Only instances are exported.
 
-module Game.SlowChess.Pretty (Pretty) where
+module Game.SlowChess.Pretty (pprint) where
 
-import           Data.Bits            ((.&.))
 import           Data.List            (intersperse, sort)
 
 import           Game.SlowChess.Board
@@ -39,25 +38,52 @@ class Pretty a where
 instance Pretty Mask where
   pretty = buildBoard . fromMask "#"
 
+-- I intend to go back to this version when development is further along, but
+-- my Emacs REPL is being weird about printing the Unicode characters are the
+-- correct width.
+--
+-- instance Pretty Board where
+--   pretty b = if conflicts b /= 0
+--                then "Invalid Board."
+--                else buildBoard (concat
+--                                 [ fromMask "♜" $ get Black Rook   b
+--                                 , fromMask "♞" $ get Black Knight b
+--                                 , fromMask "♝" $ get Black Bishop b
+--                                 , fromMask "♛" $ get Black Queen  b
+--                                 , fromMask "♚" $ get Black King   b
+--                                 , fromMask "♟" $ get Black Pawn   b
+--                                 , fromMask "♖" $ get White Rook   b
+--                                 , fromMask "♘" $ get White Knight b
+--                                 , fromMask "♗" $ get White Bishop b
+--                                 , fromMask "♕" $ get White Queen  b
+--                                 , fromMask "♔" $ get White King   b
+--                                 , fromMask "♙" $ get White Pawn   b
+--                                 ])
+
 -- | Boards are prettied like masks, but with the Unicode characters for the
 -- chess pieces to show which piece occupies a square.
 instance Pretty Board where
   pretty b = if conflicts b /= 0
                then "Invalid Board."
                else buildBoard (concat
-                                [ fromMask "♜" $ get Black Rook   b
-                                , fromMask "♞" $ get Black Knight b
-                                , fromMask "♝" $ get Black Bishop b
-                                , fromMask "♛" $ get Black Queen  b
-                                , fromMask "♚" $ get Black King   b
-                                , fromMask "♟" $ get Black Pawn   b
-                                , fromMask "♖" $ get White Rook   b
-                                , fromMask "♘" $ get White Knight b
-                                , fromMask "♗" $ get White Bishop b
-                                , fromMask "♕" $ get White Queen  b
-                                , fromMask "♔" $ get White King   b
-                                , fromMask "♙" $ get White Pawn   b
+                                [ fromMask "R" $ get Black Rook   b
+                                , fromMask "K" $ get Black Knight b
+                                , fromMask "B" $ get Black Bishop b
+                                , fromMask "Q" $ get Black Queen  b
+                                , fromMask "K" $ get Black King   b
+                                , fromMask "P" $ get Black Pawn   b
+                                , fromMask "r" $ get White Rook   b
+                                , fromMask "k" $ get White Knight b
+                                , fromMask "b" $ get White Bishop b
+                                , fromMask "q" $ get White Queen  b
+                                , fromMask "k" $ get White King   b
+                                , fromMask "p" $ get White Pawn   b
                                 ])
+
+
+-- | Like 'Print' but it uses 'Pretty' rather than 'Show'
+pprint :: Pretty a => a -> IO ()
+pprint = putStrLn . pretty
 
 -- | A tile is a board index followed by the string we'll use to represent
 -- what is occupying that index.
