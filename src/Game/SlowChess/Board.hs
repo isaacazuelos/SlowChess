@@ -95,7 +95,7 @@ update c p b m = case c of
 
 -- | Apply a mask transformation to each mask in mask in the board — even the
 -- material masks.
-forEach :: Board -> (Mask -> Mask) -> Board
+forEach :: Board -> (Mask -> Mask) -> Board -- TODO: This is just fmap?
 forEach (Board a b c d e f g h) f' = Board (f' a) (f' b) (f' c) (f' d)
                                            (f' e) (f' f) (f' g) (f' h)
 
@@ -110,3 +110,9 @@ conflicts (Board a b c d e f g h) = foldr xor 0 [a, b, c, d, e, f, g, h]
 -- type of piece is at that position.
 set :: Colour -> Piece -> Board -> Mask -> Board
 set c p b m = update c p (forEach b (`minus` m)) m
+
+-- | Apply a function to a mask belonging to a colour of a type of piece on a
+-- board. This is basically the spiritual equivalent to @fmap@ for boards.
+-- Like 'set' this prevents the creation of invalid board states.
+apply :: Colour -> Piece -> Board -> (Mask -> Mask) -> Board
+apply c p b f = set c p b (f (get c p b))

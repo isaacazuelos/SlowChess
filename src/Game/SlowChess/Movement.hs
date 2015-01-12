@@ -41,7 +41,7 @@ import           Game.SlowChess.Board
 import           Game.SlowChess.Mask
 import           Game.SlowChess.Piece
 
-import           Game.SlowChess.Pretty (pprint) -- debugging
+import           Game.SlowChess.Pretty (pprint)
 
 -- | Generates all the non-special movements that the pieces of a colour can
 -- make.
@@ -59,7 +59,7 @@ moveGen c b = concat [ moveRooks   c b
 -- or file until they choose to stop, further motion would mean stepping on a
 -- friendly unit, or the last step taken removed an enemy unit.
 moveRooks :: Colour -> Board -> [Board]
-moveRooks c b = [N,S,E,W] >>= (\ d -> cast c Rook d b)
+moveRooks c b = undefined -- [N,S,E,W] >>= (\ d -> cast c Rook d b)
 
 -- | Generates all the valid movements of the knights of a colour on a board.
 -- Knights are capable of moving to their target squares regardless of other
@@ -82,12 +82,12 @@ moveBishops = undefined
 moveQueens :: Colour -> Board -> [Board]
 moveQueens = undefined
 
--- | Generates all the valid movements of the king of a colour on a
--- board. Kings can move like queens, only they take at most 1 step in any
--- direction.
+-- -- | Generates all the valid movements of the king of a colour on a
+-- -- board. Kings can move like queens, only they take at most 1 step in any
+-- -- direction.
 moveKings :: Colour -> Board -> [Board]
-moveKings c b = allDirections >>= (hops c King b nonFriendly) 
-  where nonFriendly b' = (material (enemy c) b') <> (blanks b')
+moveKings c b = undefined -- allDirections >>= (hops c King b nonFriendly)
+--   where nonFriendly b' = (material (enemy c) b') <> (blanks b')
 
 -- | Generates *some* the valid movements of the pawns of a colour on a board.
 -- Pawn motion is the most complicated. Below are the rules governing pawn
@@ -113,31 +113,34 @@ movePawns = undefined
 -- Separating the computing of the moves and captures lets us reuse the same
 -- functions to build both the king-like and queen-like versions of the
 -- motion — exploiting the list monad.
+--
+-- A board is split into potential 'Movers' by 'movers' and these are rebuilt
+-- into actual boards by 'rebuild'. The meat in the middle is up to the
+-- particular motion type. 
 
--- | Takes a sort of 'predicate' that returns a mask of all the places on the
--- board where movement could be valid. This would typically either pick out
--- the blank squares, or enemy-occupied squares. The predicate isn't just
--- /always/ the squares not occupied by friendly units since we want to be
--- able to build up a recursive movement on blank squares for the queen, rook,
--- and bishop movements.
-hoppers :: Colour -> Piece -> Direction -> Board -> (Board -> Mask) -> Mask
-hoppers c p d b f = both (hop (rev d) (f b)) (get c p b) 
+-- | Motions on the board can happen to pieces of a colour in a direction
+-- under a certain tile predicate. 
+data Motion = Motion { colour    :: Colour         -- ^ test
+                     , piece     :: Piece
+                     , direction :: Direction
+                     , condition :: Board -> Mask
+                     }
 
--- | Move all the pieces on the board of a type and colour limited to the ones
--- in the mask by the direction. 
-applyHops :: Colour -> Piece -> Board -> Direction -> Mask -> [Board]
-applyHops c p b d m = map move (split m)
-  where move m' = set c p b (((get c p b) `minus` m') <> hop d m')
+type Mover = (Mask, Board)
 
--- | Hops all the pieces indicated by the 'predicate' mask function in the
--- specified direction.
-hops :: Colour -> Piece -> Board -> (Board -> Mask) -> Direction -> [Board]
-hops c p b f d = applyHops c p b d (hoppers c p d b f)
+-- | Start our motion 
+movers :: Motion -> Board -> [Mover]
+movers (Motion c p d f) b = map (\m -> (m, removeFromBoard m)) hopperMasks
+  where hopperMasks = split $ both (hop (rev d) (f b)) (get c p b)
+        removeFromBoard m = set c p b ((get c p b) `minus` m)
 
--- | Moves a piece along blank squares until it collides with an enemy
--- piece. This is the type of movement that's used by rooks, bishops, and
--- queens.
-cast :: Colour -> Piece -> Direction -> Board -> [Board]
-cast c p d b = (hops c p b caps d) ++ moves ++ (moves >>= cast c p d)
-  where caps = material (enemy c)
-        moves = (hops c p b blanks d)
+-- | Uses the motion of some movers to reconstitute the boards.
+--
+-- > rebuild m (movers m b f)) = b
+rebuild :: Motion -> [Mover] -> [Board]
+rebuild (Motion c p _ _) ms = map (\ (m, b) -> apply c p b (<> m)) ms
+
+-- | Move a motion's piece along it's direction until it's no longer able to
+-- move without violating the predicate. 
+cast :: Motion -> Mover -> [Mover]
+cast = undefined
