@@ -45,7 +45,7 @@ material Black = blacks
 
 -- | All of the empty squares on the board.
 blanks :: Board -> Mask
-blanks b = complement ((material White b) <> (material Black b))
+blanks b = complement (material White b <> material Black b)
 
 -- | A blank board is the board with no pieces on it.
 blank :: Board
@@ -71,8 +71,8 @@ get :: Colour -> Piece -> Board -> Mask
 get c Rook   b = both (material c b) (rooks   b)
 get c Knight b = both (material c b) (knights b)
 get c Bishop b = both (material c b) (bishops b)
-get c Queen  b = both (material c b) (kings   b)
-get c King   b = both (material c b) (queens  b)
+get c Queen  b = both (material c b) (queens  b)
+get c King   b = both (material c b) (kings   b)
 get c Pawn   b = both (material c b) (pawns   b)
 
 -- | Update the positions of a type of piece (of a colour) on a board. Unlike
@@ -89,8 +89,8 @@ update c p b m = case c of
             Rook   -> b' { rooks   = newPieces m' c' p' b' }
             Knight -> b' { knights = newPieces m' c' p' b' }
             Bishop -> b' { bishops = newPieces m' c' p' b' }
-            Queen  -> b' { kings   = newPieces m' c' p' b' }
-            King   -> b' { queens  = newPieces m' c' p' b' }
+            Queen  -> b' { queens  = newPieces m' c' p' b' }
+            King   -> b' { kings   = newPieces m' c' p' b' }
             Pawn   -> b' { pawns   = newPieces m' c' p' b' }
 
 -- | Apply a mask transformation to each mask in mask in the board — even the
