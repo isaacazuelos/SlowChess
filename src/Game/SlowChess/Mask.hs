@@ -14,11 +14,12 @@ module Game.SlowChess.Mask ( -- * Constructing Masks
                              Mask (Mask)
                            , fromList
                            , toList
+                             -- * Mask Operations
                            , both
                            , minus
+                           , invert
                            , split
                              -- * Movement
-                           , moveable
                            , hop
                            ) where
 
@@ -94,13 +95,20 @@ both = (.&.)
 minus :: Mask -> Mask -> Mask
 minus a b = a .&. complement b
 
+-- | Inverts which positions are marked and which are not.
+--
+-- >        1 0 1   0 0 1
+-- > invert 0 1 0 = 0 0 0
+-- >        1 0 1   1 0 1
+invert :: Mask -> Mask
+invert = complement
+
 -- | Split a mask with multiple pieces into a list of masks with one position
 -- occupied each.
 split :: Mask -> [Mask]
 split = map maskFromIndex . toList
 
--- Movement
--- --------
+-- ** Movement
 
 -- The basic motions are done through shifts. Since these shifts *could* cause
 -- certain positions to wrap around, we need to bitwise 'and' the board to be

@@ -4,22 +4,23 @@
 -- License     : MIT License
 -- Maintainer  : Isaac Azuelos
 --
--- A chess board is just the tiles of the board 8x8 board, and which kind of
--- piece they're occupied by.
+-- A chess board is just the tiles of the 8x8 board, and which kind of piece
+-- they're occupied by.
 
-module Game.SlowChess.Board {-
-                            ( Board
+module Game.SlowChess.Board ( -- * Board Creation
+                              Board ( pawns, rooks, knights, bishops
+                                    , kings, queens, whites, blacks)
                             , blank
                             , starting
+                              -- * Modification
                             , get
                             , set
+                              -- * Operations
                             , material
-                            )
-                            -} where
+                            , blanks
+                            , conflicts
+                            ) where
 
-import           Data.Bits            (complement, xor) -- these should really
-                                                        -- be done in
-                                                        -- SlowChess.Mask...
 import           Data.Monoid          ((<>))
 
 import           Game.SlowChess.Mask
@@ -50,7 +51,7 @@ material Black = blacks
 
 -- | All of the empty squares on the board.
 blanks :: Board -> Mask
-blanks b = complement (material White b <> material Black b)
+blanks b = invert (material White b <> material Black b)
 
 -- | A blank board is the board with no pieces on it.
 blank :: Board
@@ -110,6 +111,7 @@ forEach (Board a b c d e f g h) f' = Board (f' a) (f' b) (f' c) (f' d)
 -- > conflicts (set c p b m) == mempty
 conflicts :: Board -> Mask
 conflicts (Board a b c d e f g h) = foldr xor 0 [a, b, c, d, e, f, g, h]
+  where xor p q = both (p <> q) (invert (both p q))
 
 -- | Set the positions of a type of piece on a board, ensuring that no other
 -- type of piece is at that position.

@@ -6,7 +6,7 @@
 --
 -- Basic chess terms.
 
-module Game.SlowChess.Piece where
+module Game.SlowChess.Piece where -- all symbols are exported
 
 -- | There are two colours used in Chess, white and black. They have names and
 -- are not equal.
@@ -29,7 +29,7 @@ data Piece = Rook
 
 -- | When things move in a direction, they can be moved either up or down
 -- their respective rank or file, or some combination of both. For the sake of
--- brevity, I've used the cardinal directions (where A8 is the NW corner.)
+-- brevity, the cardinal directions are used (where A8 is the NW corner.)
 data Direction = N | NE | E | SE | S | SW | W | NW deriving (Show, Eq)
 
 -- | Reverse a direction.
@@ -45,6 +45,6 @@ rev SW = NE
 rev W  = E
 rev NW = SE
 
--- | All of the directions.
+-- | All of the directions in a list.
 allDirections :: [Direction]
 allDirections = [N, NE, E, SE, S, SW, W, NW]

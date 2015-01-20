@@ -13,16 +13,18 @@
 -- the current board. Since no notion of a /game/ exists yet, we can't work on
 -- that.
 --
--- Here are the types of movements not covered here.
+-- The larger piece-specific movements are made out of smaller ones — so they
+-- should be sufficient to add the more complex movements later.
+--
+-- Here is a (potentially incomplete for now) list of the types of movements
+-- not covered here.
 --
 -- * En Passant moves
 -- * Castling
 -- * Forced movement due to being in check.
---
--- These /larger/ movements are made out of smaller ones.
 
-module Game.SlowChess.Movement( -- * Moves
-                                 moveGen
+module Game.SlowChess.Movement( -- * All Moves
+                                 moves
                                  -- * Piece-specific Movements
                                , moveRooks
                                , moveKnights
@@ -35,24 +37,22 @@ module Game.SlowChess.Movement( -- * Moves
                                , cast
                                ) where
 
-import           Data.Monoid           ((<>))
+import           Data.Monoid          ((<>))
 
 import           Game.SlowChess.Board
 import           Game.SlowChess.Mask
 import           Game.SlowChess.Piece
 
-import           Game.SlowChess.Pretty (pprint)
-
 -- | Generates all the non-special movements that the pieces of a colour can
 -- make.
-moveGen :: Colour -> Board -> [Board]
-moveGen c b = concat [ moveRooks   c b
-                     , moveKnights c b
-                     , moveBishops c b
-                     , moveQueens  c b
-                     , moveKings   c b
-                     , movePawns   c b
-                     ]
+moves :: Colour -> Board -> [Board]
+moves c b = concat [ moveRooks   c b
+                   , moveKnights c b
+                   , moveBishops c b
+                   , moveQueens  c b
+                   , moveKings   c b
+                   , movePawns   c b
+                   ]
 
 -- | Generates all the valid boards which follow from movements of the rooks
 -- of a colour on a board.  Rooks move out in straight lines along their rank

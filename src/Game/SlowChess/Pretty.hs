@@ -4,11 +4,9 @@
 -- License     : MIT License
 -- Maintainer  : Isaac Azuelos
 --
--- Pretty is a tool for pretty printing the chess-related data types.
---
--- Only instances are exported.
+-- Pretty is a tool for pretty printing the chess data types.
 
-module Game.SlowChess.Pretty (pprint) where
+module Game.SlowChess.Pretty (Pretty (pretty), pprint) where
 
 import           Data.List            (intersperse, sort)
 
@@ -38,28 +36,6 @@ class Pretty a where
 instance Pretty Mask where
   pretty = buildBoard . fromMask "#"
 
--- I intend to go back to this version when development is further along, but
--- my Emacs REPL is being weird about printing the Unicode characters are the
--- correct width.
---
--- instance Pretty Board where
---   pretty b = if conflicts b /= 0
---                then "Invalid Board."
---                else buildBoard (concat
---                                 [ fromMask "♜" $ get Black Rook   b
---                                 , fromMask "♞" $ get Black Knight b
---                                 , fromMask "♝" $ get Black Bishop b
---                                 , fromMask "♛" $ get Black Queen  b
---                                 , fromMask "♚" $ get Black King   b
---                                 , fromMask "♟" $ get Black Pawn   b
---                                 , fromMask "♖" $ get White Rook   b
---                                 , fromMask "♘" $ get White Knight b
---                                 , fromMask "♗" $ get White Bishop b
---                                 , fromMask "♕" $ get White Queen  b
---                                 , fromMask "♔" $ get White King   b
---                                 , fromMask "♙" $ get White Pawn   b
---                                 ])
-
 -- | Boards are prettied like masks, but with the Unicode characters for the
 -- chess pieces to show which piece occupies a square.
 instance Pretty Board where
@@ -79,7 +55,6 @@ instance Pretty Board where
                                 , fromMask "k" $ get White King   b
                                 , fromMask "p" $ get White Pawn   b
                                 ])
-
 
 -- | Like 'Print' but it uses 'Pretty' rather than 'Show'
 pprint :: Pretty a => a -> IO ()
