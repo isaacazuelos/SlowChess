@@ -21,8 +21,7 @@
 --
 -- These /larger/ movements are made out of smaller ones.
 
-module Game.SlowChess.Movement {-
-                               ( -- * Move
+module Game.SlowChess.Movement( -- * Moves
                                  moveGen
                                  -- * Piece-specific Movements
                                , moveRooks
@@ -32,8 +31,9 @@ module Game.SlowChess.Movement {-
                                , moveKings
                                , movePawns
                                  -- * General Movements
-                               , move
-                               ) -} where
+                               , step
+                               , cast
+                               ) where
 
 import           Data.Monoid           ((<>))
 
@@ -129,7 +129,7 @@ movers c p d f b = map (\m -> (removeFromBoard m, m)) hopperMasks
 --
 -- > rebuild m (movers m b f)) = b
 rebuild :: Colour -> Piece -> Board -> Mask -> Board
-rebuild c p b m = apply c p b (<> m)
+rebuild c p b m = set c p b (get c p b <> m) -- use `set` so captures work
 
 -- | Steps a piece until it cannot be stepped anymore in that direction.
 castMask :: Direction -> Mask -> Mask -> [Mask]
@@ -155,6 +155,6 @@ cast c p b d = movers c p d (blanks b) b >>= caster
 -- pawn movements, since they're conditional on the type of piece on the
 -- occupying square.
 step :: Colour -> Piece -> (Board -> Mask) -> Board -> Direction -> [Board]
-step c p f b d = movers c p d (blanks b) b >>= stepper
+step c p f b d = movers c p d (f b) b >>= stepper
   where stepper (b', m) = map (rebuild c p b') (positions m)
         positions = stepMask d (f b)

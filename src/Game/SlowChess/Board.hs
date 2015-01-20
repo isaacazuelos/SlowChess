@@ -17,7 +17,9 @@ module Game.SlowChess.Board {-
                             )
                             -} where
 
-import           Data.Bits            (complement, xor)
+import           Data.Bits            (complement, xor) -- these should really
+                                                        -- be done in
+                                                        -- SlowChess.Mask...
 import           Data.Monoid          ((<>))
 
 import           Game.SlowChess.Mask
@@ -36,7 +38,10 @@ data Board = Board { pawns   :: Mask
                    , queens  :: Mask
                    , whites  :: Mask
                    , blacks  :: Mask
-                   } deriving (Show, Eq)
+                   } deriving ( Show
+                              , Eq
+                              , Ord -- Debugging, not scoring
+                              )
 
 -- | All of the positions held by pieces of a colour.
 material :: Colour -> Board -> Mask
@@ -83,7 +88,7 @@ update :: Colour -> Piece -> Board -> Mask -> Board
 update c p b m = case c of
     White -> (updatePieces m c p b) { whites = newMaterial }
     Black -> (updatePieces m c p b) { blacks = newMaterial }
-  where newMaterial =  m <> (material c b `minus` get c p b)
+  where newMaterial      = m <> (material c b `minus` get c p b)
         newPieces    m' c' p' b' = m' <> get (enemy c') p' b'
         updatePieces m' c' p' b' = case p of
             Rook   -> b' { rooks   = newPieces m' c' p' b' }
@@ -110,9 +115,3 @@ conflicts (Board a b c d e f g h) = foldr xor 0 [a, b, c, d, e, f, g, h]
 -- type of piece is at that position.
 set :: Colour -> Piece -> Board -> Mask -> Board
 set c p b m = update c p (forEach b (`minus` m)) m
-
--- | Apply a function to a mask belonging to a colour of a type of piece on a
--- board. This is basically the spiritual equivalent to @fmap@ for boards.
--- Like 'set' this prevents the creation of invalid board states.
-apply :: Colour -> Piece -> Board -> (Mask -> Mask) -> Board
-apply c p b f = set c p b (f (get c p b))

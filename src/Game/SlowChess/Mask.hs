@@ -45,7 +45,7 @@ import           Game.SlowChess.Piece
 -- >    2 08 09 10 11 12 13 14 15
 -- >    1 00 01 02 03 04 05 06 07
 -- >      a  b  c  d  e  f  g  h
-newtype Mask = Mask Word64 deriving ( Show, Eq, Bits, Num)
+newtype Mask = Mask Word64 deriving ( Show, Eq, Bits, Num, Ord )
 
 -- | Masks form a monoid where the identity is an empty mask and our operation
 -- preserves the occupied spaces of both operands. Note that this monoid is
