@@ -23,21 +23,21 @@
 -- * Castling
 -- * Forced movement due to being in check.
 
-module Game.SlowChess.Movement( -- * All Moves
+module Game.SlowChess.Movement ( -- * All Moves
                                  moves
                                  -- * Piece-specific Movements
-                               , moveRooks
-                               , moveKnights
-                               , moveBishops
-                               , moveQueens
-                               , moveKings
-                               , movePawns
+                               , moveRooks   -- done
+                               , moveKnights --
+                               , moveBishops -- done
+                               , moveQueens  -- done
+                               , moveKings   -- done
+                               , movePawns   --
                                  -- * General Movements
                                , step
                                , cast
                                ) where
 
-import           Data.Monoid          ((<>))
+import           Data.Monoid           ((<>))
 
 import           Game.SlowChess.Board
 import           Game.SlowChess.Mask
@@ -47,7 +47,7 @@ import           Game.SlowChess.Piece
 -- make.
 moves :: Colour -> Board -> [Board]
 moves c b = concat [ moveRooks   c b
-                   , moveKnights c b
+                   -- , moveKnights c b
                    , moveBishops c b
                    , moveQueens  c b
                    , moveKings   c b
@@ -59,7 +59,7 @@ moves c b = concat [ moveRooks   c b
 -- or file until they choose to stop, further motion would mean stepping on a
 -- friendly unit, or the last step taken removed an enemy unit.
 moveRooks :: Colour -> Board -> [Board]
-moveRooks c b = [N,S,E,W] >>= cast c Rook b
+moveRooks c b = [N, S, E, W] >>= cast c Rook b
 
 -- | Generates all the valid movements of the knights of a colour on a board.
 -- Knights are capable of moving to their target squares regardless of other
@@ -69,12 +69,29 @@ moveRooks c b = [N,S,E,W] >>= cast c Rook b
 -- * The target square would not be on the board.
 -- * The target square is occupied by a piece of the same colour.
 moveKnights :: Colour -> Board -> [Board]
-moveKnights = undefined
+moveKnights c b = do (b', knight) <- splitOff (knights b) c Knight b
+                     movedKnight  <- knightLandings knight
+                     if 0 == both movedKnight (blanks b <> material (enemy c) b)
+                       then []
+                       else return $ rebuild c Knight b' movedKnight
+
+-- | For a knight at a coordinate, it gives all coordinates that it could jump
+-- to. This does filter out jumps that would move the piece off the board.
+knightLandings :: Mask -> [Mask]
+knightLandings m = filter (/= 0) $ map (\ f -> f m) [ hop N . hop N . hop E
+                                                    , hop E . hop E . hop N
+                                                    , hop E . hop E . hop S
+                                                    , hop S . hop S . hop E
+                                                    , hop S . hop S . hop W
+                                                    , hop W . hop W . hop S
+                                                    , hop W . hop W . hop N
+                                                    , hop N . hop N . hop W
+                                                    ]
 
 -- | Generates all the valid movements of the bishops of a colour on a board.
 -- Bishops move diagonally, under the same conditions as rooks.
 moveBishops :: Colour -> Board -> [Board]
-moveBishops c b = [NE,SE,NW,SW] >>= cast c Bishop b
+moveBishops c b = [NE, SE, NW, SW] >>= cast c Bishop b
 
 -- | Generates all the valid movements of the queens of a colour on a board.
 -- Queens can move either like rooks or like bishops — either straight or at a
@@ -94,7 +111,7 @@ moveKings c b = allDirections >>= step c King notFriends b
 -- movement as implemented here. Some more special rules that require more
 -- information about game state and history are elsewhere.
 --
--- * Pawns can only move forward, i.e. along their files away from the rank
+-- * Pawns can only move /forward/, i.e. along their files away from the rank
 --   that the king of the same colour started on.
 --
 -- * Pawns can capture if the squares diagonally forward are occupied by an
@@ -104,9 +121,43 @@ moveKings c b = allDirections >>= step c King notFriends b
 --
 -- * Pawns on their starting rank can move directly forward either one or two
 --   squares. Since they cannot move backwards, if a pawn is on the starting
---   rank for it's colour, than it hasn't moved.
+--   rank for its colour, then it hasn't moved.
 movePawns :: Colour -> Board -> [Board]
-movePawns = undefined
+movePawns c b = concat [ stepForward
+                       , capture
+                       , stepTwice
+                       ]
+  where fwd = forward c
+        stepForward = step c Pawn (blanks) b fwd
+        capture = forwardAttack c >>= step c Pawn (material (enemy c)) b
+        stepTwice = map (uncurry $ rebuild c Pawn) steppedTwice
+        twiceSteppers = splitOff (canStepTwice c b) c Pawn b -- :: [(Board, Mask)]
+        hopTwice = hop fwd . hop fwd
+        steppedTwice = map (\ (b', m) ->(b', hopTwice m)) twiceSteppers
+
+-- | The pieces that can move two squares forward, i.e. the pieces with two
+-- blanks in front of them on the starting rank for their colour.
+canStepTwice :: Colour -> Board -> Mask
+canStepTwice c b = (get c Pawn b)
+                   `both` (hop back (blanks b))
+                   `both` (hop back (hop back (blanks b)))
+                   `both` (startingRank c)
+  where back = rev (forward c)
+
+-- | The squares a piece can land on from the staring rank.
+startingRank :: Colour -> Mask
+startingRank White = fromList [8..15]
+startingRank Black = fromList [48..55]
+
+-- | The /forward/ direction as used by pawn motions.
+forward :: Colour -> Direction
+forward White = N
+forward Black = S
+
+-- | The directions the pawns of a colour can attack.
+forwardAttack :: Colour -> [Direction]
+forwardAttack White = [NE, NW]
+forwardAttack Black = [SE, SW]
 
 -- * General Movements
 --
@@ -118,12 +169,15 @@ movePawns = undefined
 -- into actual boards by 'rebuild'. The meat in the middle is up to the
 -- particular motion type.
 
+-- | Pieces on the first filter mask are broken off the board.
+splitOff :: Mask -> Colour -> Piece -> Board -> [(Board, Mask)]
+splitOff f c p b = map takeOff (split $ both f (get c p b))
+  where takeOff m = (set c p b (get c p b `minus` m), m)
+
 -- | Start our motion by breaking each piece being considered off the boards,
 -- returning the mask for the position of the piece and the board.
-movers :: Colour -> Piece -> Direction -> Mask -> Board -> [(Board, Mask)]
-movers c p d f b = map (\m -> (removeFromBoard m, m)) hopperMasks
-  where hopperMasks = split $ both (hop (rev d) f) (get c p b)
-        removeFromBoard m = set c p b (get c p b `minus` m)
+movers :: Mask -> Direction -> Colour -> Piece -> Board -> [(Board, Mask)]
+movers f d = splitOff (hop (rev d) f)
 
 -- | Uses the motion of some movers to reconstitute the boards.
 --
@@ -131,7 +185,8 @@ movers c p d f b = map (\m -> (removeFromBoard m, m)) hopperMasks
 rebuild :: Colour -> Piece -> Board -> Mask -> Board
 rebuild c p b m = set c p b (get c p b <> m) -- use `set` so captures work
 
--- | Steps a piece until it cannot be stepped anymore in that direction.
+-- | Steps a piece until it cannot be stepped anymore in that direction, or it
+-- has move the number of steps indicated.
 castMask :: Direction -> Mask -> Mask -> [Mask]
 castMask d f m = stepMask d f m ++ (stepMask d f m >>= castMask d f)
 
@@ -141,10 +196,10 @@ stepMask :: Direction -> Mask -> Mask -> [Mask]
 stepMask d f m = if m' == 0 then [] else [m']
   where m' = both f (hop d m)
 
--- | Steps a piece over blank squares until it hit (and captures) a single
+-- | Steps a piece over blank squares until it hits (and captures) a single
 -- enemy. This is the type of motion used by rooks, bishops and queens.
 cast :: Colour -> Piece -> Board -> Direction -> [Board]
-cast c p b d = movers c p d (blanks b) b >>= caster
+cast c p b d = movers (blanks b) d c p b >>= caster
   where caster (b', m) = map (rebuild c p b') (positions m)
         positions m = casts m ++ (casts m >>= stepMask d enemies)
         casts = castMask d (blanks b)
@@ -155,6 +210,6 @@ cast c p b d = movers c p d (blanks b) b >>= caster
 -- pawn movements, since they're conditional on the type of piece on the
 -- occupying square.
 step :: Colour -> Piece -> (Board -> Mask) -> Board -> Direction -> [Board]
-step c p f b d = movers c p d (f b) b >>= stepper
+step c p f b d = movers (f b) d c p b >>= stepper
   where stepper (b', m) = map (rebuild c p b') (positions m)
         positions = stepMask d (f b)

@@ -43,13 +43,13 @@ instance Pretty Board where
                then "Invalid Board."
                else buildBoard (concat
                                 [ fromMask "R" $ get Black Rook   b
-                                , fromMask "K" $ get Black Knight b
+                                , fromMask "H" $ get Black Knight b
                                 , fromMask "B" $ get Black Bishop b
                                 , fromMask "Q" $ get Black Queen  b
                                 , fromMask "K" $ get Black King   b
                                 , fromMask "P" $ get Black Pawn   b
                                 , fromMask "r" $ get White Rook   b
-                                , fromMask "k" $ get White Knight b
+                                , fromMask "h" $ get White Knight b
                                 , fromMask "b" $ get White Bishop b
                                 , fromMask "q" $ get White Queen  b
                                 , fromMask "k" $ get White King   b

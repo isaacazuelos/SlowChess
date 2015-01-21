@@ -10,7 +10,9 @@ To Do List
 
 ### To Implement
 
-* Basic piece movement
+* ~~Basic Chess Terms~~
+* ~~Board Representation~~
+* ~~Basic piece movement~~
 * Build a concept of a *game*.
 * Special piece movement.
 * Game AI — Negamax?
@@ -22,7 +24,9 @@ To Do List
 ### To Fix
 
 * Add tests for older modules
-    * `Game.SlowChess.Mask`, There are a bunch of declared properties in the
+    * `Game.SlowChess.Movement` — Expand the tests to cover the piece-specific
+      move functions against the rules in the documentation.
+    * `Game.SlowChess.Mask` — There are a bunch of declared properties in the
 	  documentation that could be tested with QuickCheck (mostly) easily.
     * `Game.SlowChess.Board`
 	* `Game.SlowChess.Piece`, although I'm not sure there's much to test.
