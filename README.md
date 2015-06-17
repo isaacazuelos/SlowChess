@@ -5,6 +5,11 @@ A chess engine in Haskell with no great emphasis on anything.
 
 It's still *very* early in development, so there's nothing much to see.
 
+In Progress
+-----------
+
+Sketching out what a is meant by a *game* has started, but isn't nearly complete.
+
 To Do List
 ----------
 
@@ -33,4 +38,14 @@ To Do List
 * Extend the documentation for `Game.SlowChess.Movement.movePawn` with links
   to where special pawn movement is documented.
 
+### To maybe fix?
+
+Right now, non-special movement is done almost entierly though functions that
+take a board and yeild a list of boards. It might be worth trying functions
+that yeild a list of possible moves, which then get filtered based on when the
+move is valid --- eventually applying the valid moves to generate the new
+boards. I have no idea about performance considerations either way, but I
+think it'd likely be cleaner code --- especially later when the reading and
+writing games move-by-move. There should *definitly* be a solid movement test
+suite before this is attempted.
 

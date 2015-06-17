@@ -3,7 +3,7 @@ version:               0.1.0.0
 category:              Game
 synopsis:              A chess engine.
 description:
-  A chess engine in Haskell, with no great emphasis on anything.
+  A chess engine in Haskell.
 license:               MIT
 license-file:          LICENSE
 author:                Isaac Azuelos
@@ -28,6 +28,8 @@ library
     Game.SlowChess.Movement
     Game.SlowChess.Piece
     Game.SlowChess.Pretty
+    Game.SlowChess.Game
+    Game.SlowChess.Game.Internal
   build-depends:
     base >= 4.7 && < 4.8
 

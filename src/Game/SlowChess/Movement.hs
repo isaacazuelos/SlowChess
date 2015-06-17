@@ -4,20 +4,19 @@
 -- License     : MIT License
 -- Maintainer  : Isaac Azuelos
 --
--- Move generation for chess pieces.
+-- Simple move generation for chess pieces.
 --
 -- Move generation in Chess can be pretty complicated. This module handles the
 -- basic types of movements that apply to the different kinds of pieces in
--- their typical cases. Some allowed kinds of movement can not be handled
--- here, as they require greater knowledge of the state of the game than just
--- the current board. Since no notion of a /game/ exists yet, we can't work on
--- that.
+-- their typical cases.
 --
--- The larger piece-specific movements are made out of smaller ones — so they
--- should be sufficient to add the more complex movements later.
+-- Some allowed kinds of movement require greater knowledge of the state of
+-- the game than just the current board. For more information on this issue,
+-- and how it's being worked around, see the note in
+-- 'Game.SlowChess.Game.Internal'.
 --
 -- Here is a (potentially incomplete for now) list of the types of movements
--- not covered here.
+-- not covered here yet, which are referred to as the /special/ movements..
 --
 -- * En Passant moves
 -- * Castling
@@ -26,12 +25,12 @@
 module Game.SlowChess.Movement ( -- * All Moves
                                  moves
                                  -- * Piece-specific Movements
-                               , moveRooks   -- done
-                               , moveKnights --
-                               , moveBishops -- done
-                               , moveQueens  -- done
-                               , moveKings   -- done
-                               , movePawns   --
+                               , moveRooks
+                               , moveKnights
+                               , moveBishops
+                               , moveQueens
+                               , moveKings
+                               , movePawns
                                  -- * General Movements
                                , step
                                , cast
@@ -43,11 +42,10 @@ import           Game.SlowChess.Board
 import           Game.SlowChess.Mask
 import           Game.SlowChess.Piece
 
--- | Generates all the non-special movements that the pieces of a colour can
--- make.
+-- | Generates all the non-special movements for the pieces of a colour.
 moves :: Colour -> Board -> [Board]
 moves c b = concat [ moveRooks   c b
-                   -- , moveKnights c b
+                   , moveKnights c b
                    , moveBishops c b
                    , moveQueens  c b
                    , moveKings   c b
@@ -55,7 +53,7 @@ moves c b = concat [ moveRooks   c b
                    ]
 
 -- | Generates all the valid boards which follow from movements of the rooks
--- of a colour on a board.  Rooks move out in straight lines along their rank
+-- of a colour on a board. Rooks move out in straight lines along their rank
 -- or file until they choose to stop, further motion would mean stepping on a
 -- friendly unit, or the last step taken removed an enemy unit.
 moveRooks :: Colour -> Board -> [Board]

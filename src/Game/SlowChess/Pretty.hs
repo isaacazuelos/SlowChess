@@ -6,16 +6,17 @@
 --
 -- Pretty is a tool for pretty printing the chess data types.
 
-module Game.SlowChess.Pretty (Pretty (pretty), pprint) where
+module Game.SlowChess.Pretty (Pretty (pretty), pprint, pprintL) where
 
 import           Data.List            (intersperse, sort)
 
 import           Game.SlowChess.Board
 import           Game.SlowChess.Mask
 import           Game.SlowChess.Piece
+import           Game.SlowChess.Game.Internal
 
--- | A pretty pretty printing typeclass like @Show@, but without the an
--- emphasis on being human readable.
+-- | A pretty pretty printing typeclass like @Show@, but with more of an
+-- emphasis on being human readable. Useful for the REPL.
 class Pretty a where
   pretty :: a -> String
 
@@ -56,9 +57,20 @@ instance Pretty Board where
                                 , fromMask "p" $ get White Pawn   b
                                 ])
 
--- | Like 'Print' but it uses 'Pretty' rather than 'Show'
+-- | Pretty print a game
+instance Pretty Game where
+  pretty (Game p c b h) = pretty b ++
+                          "\n player: " ++ show p ++
+                          "\n condition: " ++ show c ++
+                          "\n moves: " ++ (show . length) h
+
+-- | Like 'print' but it uses 'Pretty' rather than 'Show'.
 pprint :: Pretty a => a -> IO ()
 pprint = putStrLn . pretty
+
+-- | `pprint` each element in a list.
+pprintL :: Pretty a => [a] -> IO ()
+pprintL = mapM_ (putStrLn . pretty)
 
 -- | A tile is a board index followed by the string we'll use to represent
 -- what is occupying that index.
