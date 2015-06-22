@@ -59,10 +59,18 @@ instance Pretty Board where
 
 -- | Pretty print a game
 instance Pretty Game where
-  pretty (Game p c b h) = pretty b ++
-                          "\n player: " ++ show p ++
-                          "\n condition: " ++ show c ++
-                          "\n moves: " ++ (show . length) h
+  pretty (Game p b co ca h) = pretty b ++
+                          "\n  player: " ++ show p ++
+                          "\n  condition: " ++ show co ++
+                          "\n  caslting: " ++ pretty ca ++
+                          "\n  moves: " ++ (show . length) h
+
+-- | Castling state is pretty printed in just a nicer english representation.
+instance Pretty Castle where
+  pretty (Castle True True)   = "both"
+  pretty (Castle True False)  = "only white"
+  pretty (Castle False True)  = "only black"
+  pretty (Castle False False) = "neither"
 
 -- | Like 'print' but it uses 'Pretty' rather than 'Show'.
 pprint :: Pretty a => a -> IO ()

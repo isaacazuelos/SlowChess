@@ -13,5 +13,10 @@ import Game.SlowChess.Board
 import Game.SlowChess.Game.Internal
 
 new :: Game
-new = Game White Normal starting []
+new = Game { player    = White
+           , board     = starting
+           , condition = Normal
+           , castle    = Castle True True
+           , history   = []
+           }
 
