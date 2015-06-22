@@ -25,7 +25,7 @@ library
   exposed-modules:
     Game.SlowChess.Board
     Game.SlowChess.Mask
-    Game.SlowChess.Movement
+    Game.SlowChess.Move
     Game.SlowChess.Piece
     Game.SlowChess.Pretty
     Game.SlowChess.Game

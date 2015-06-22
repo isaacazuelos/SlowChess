@@ -14,6 +14,7 @@ import           Game.SlowChess.Board
 import           Game.SlowChess.Mask
 import           Game.SlowChess.Piece
 import           Game.SlowChess.Game.Internal
+import           Game.SlowChess.Move
 
 -- | A pretty pretty printing typeclass like @Show@, but with more of an
 -- emphasis on being human readable. Useful for the REPL.
@@ -71,6 +72,10 @@ instance Pretty Castle where
   pretty (Castle True False)  = "only white"
   pretty (Castle False True)  = "only black"
   pretty (Castle False False) = "neither"
+
+-- | This should eventually look something more like "a1->b2".
+instance Pretty Ply where
+  pretty (Move s t) = buildBoard $ (fromMask "s" s) ++ (fromMask "t" t)
 
 -- | Like 'print' but it uses 'Pretty' rather than 'Show'.
 pprint :: Pretty a => a -> IO ()

@@ -19,6 +19,7 @@ module Game.SlowChess.Board ( -- * Board Creation
                             , material
                             , blanks
                             , conflicts
+                            , remove
                             ) where
 
 import           Data.Monoid          ((<>))
@@ -117,3 +118,7 @@ conflicts (Board a b c d e f g h) = foldr xor 0 [a, b, c, d, e, f, g, h]
 -- type of piece is at that position.
 set :: Colour -> Piece -> Board -> Mask -> Board
 set c p b m = update c p (forEach b (`minus` m)) m
+
+-- | Remove all the positions marked on a mask from a board.
+remove :: Board -> Mask -> Board
+remove b m = forEach b (`minus` m)
