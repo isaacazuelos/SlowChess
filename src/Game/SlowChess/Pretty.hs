@@ -6,7 +6,7 @@
 --
 -- Pretty is a tool for pretty printing the chess data types.
 
-module Game.SlowChess.Pretty (Pretty (pretty), pprint, pprintL) where
+module Game.SlowChess.Pretty (Pretty (pretty), pprint) where
 
 import           Data.List            (intersperse, sort)
 
@@ -77,13 +77,12 @@ instance Pretty Castle where
 instance Pretty Ply where
   pretty (Move s t) = buildBoard $ (fromMask "s" s) ++ (fromMask "t" t)
 
+instance Pretty a => Pretty [a] where
+  pretty xs = concat $ intersperse "\n" (map pretty xs)
+
 -- | Like 'print' but it uses 'Pretty' rather than 'Show'.
 pprint :: Pretty a => a -> IO ()
 pprint = putStrLn . pretty
-
--- | `pprint` each element in a list.
-pprintL :: Pretty a => [a] -> IO ()
-pprintL = mapM_ (putStrLn . pretty)
 
 -- | A tile is a board index followed by the string we'll use to represent
 -- what is occupying that index.
