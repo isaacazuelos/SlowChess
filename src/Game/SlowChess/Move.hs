@@ -150,7 +150,7 @@ on s m = s /= 0 && (s <> m) == m
 -- | Step each piece of a kind and colour on a board in a direction, with no
 -- regard for if the step is onto a valid location, returns the board.
 stepAny :: Direction -> Mask -> [Mask]
-stepAny d m = if (hop d m) == 0 then mzero else return (hop d m)
+stepAny d m = if hop d m == 0 then mzero else return (hop d m)
 
 -- | Step each piece of a kind and colour on a board in a direction, landing
 -- only on non-friendly squares  --- i.e. blanks or enemy units.
@@ -161,9 +161,9 @@ step c b d s = stepAny d s >>= lands (nonFriendly c b)
 -- enemy. This is the type of motion used by rooks, bishops and queens.
 cast :: Colour -> Board -> Direction -> Mask -> [Mask]
 cast c b d s = do candidate <- step c b d s
-                  if candidate `on` (blanks b)
-                    then candidate:(cast c b d candidate)
-                    else if candidate `on` (material (enemy c) b)
+                  if candidate `on` blanks b
+                    then candidate : cast c b d candidate
+                    else if candidate `on` material (enemy c) b
                          then return candidate
                          else mzero
 

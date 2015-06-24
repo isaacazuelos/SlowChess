@@ -75,10 +75,10 @@ instance Pretty Castle where
 
 -- | This should eventually look something more like "a1->b2".
 instance Pretty Ply where
-  pretty (Move _ _ s t) = buildBoard $ (fromMask "s" s) ++ (fromMask "t" t)
+  pretty (Move _ _ s t) = buildBoard $ fromMask "s" s ++ fromMask "t" t
 
 instance Pretty a => Pretty [a] where
-  pretty xs = concat $ intersperse "\n" (map pretty xs)
+  pretty xs = intercalate "\n" (map pretty xs)
 
 -- | Like 'print' but it uses 'Pretty' rather than 'Show'.
 pprint :: Pretty a => a -> IO ()
