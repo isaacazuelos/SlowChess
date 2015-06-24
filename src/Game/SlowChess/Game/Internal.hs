@@ -23,8 +23,8 @@
 
 module Game.SlowChess.Game.Internal where
 
-import Game.SlowChess.Board
-import Game.SlowChess.Piece
+import           Game.SlowChess.Board
+import           Game.SlowChess.Piece
 
 -- | A raw game state. Since this is still being sketched, this is
 -- likely to change a lot over the next few commits.

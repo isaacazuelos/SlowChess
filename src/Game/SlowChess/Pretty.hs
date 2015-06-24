@@ -13,7 +13,7 @@ import           Data.List                    (intersperse, sort)
 import           Game.SlowChess.Board
 import           Game.SlowChess.Game.Internal
 import           Game.SlowChess.Mask
-import           Game.SlowChess.Move
+import           Game.SlowChess.Move.Internal
 import           Game.SlowChess.Piece
 
 -- | A pretty pretty printing typeclass like @Show@, but with more of an
@@ -78,7 +78,7 @@ instance Pretty Ply where
   pretty (Move _ _ s t) = buildBoard $ fromMask "s" s ++ fromMask "t" t
 
 instance Pretty a => Pretty [a] where
-  pretty xs = intercalate "\n" (map pretty xs)
+  pretty xs = concat $ intersperse "\n" (map pretty xs)
 
 -- | Like 'print' but it uses 'Pretty' rather than 'Show'.
 pprint :: Pretty a => a -> IO ()

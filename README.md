@@ -18,7 +18,7 @@ To Do List
 * ~~Basic Chess Terms~~
 * ~~Board Representation~~
 * ~~Basic piece movement~~
-* Build a concept of a *game*.
+* ~~Build a concept of a *game*~~
 * Special piece movement.
 * Game AI — Negamax?
 * Game UI — The `/cli/` directory and executable are for this.
