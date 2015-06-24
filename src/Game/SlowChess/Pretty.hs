@@ -8,13 +8,13 @@
 
 module Game.SlowChess.Pretty (Pretty (pretty), pprint) where
 
-import           Data.List            (intersperse, sort)
+import           Data.List                    (intersperse, sort)
 
 import           Game.SlowChess.Board
-import           Game.SlowChess.Mask
-import           Game.SlowChess.Piece
 import           Game.SlowChess.Game.Internal
+import           Game.SlowChess.Mask
 import           Game.SlowChess.Move
+import           Game.SlowChess.Piece
 
 -- | A pretty pretty printing typeclass like @Show@, but with more of an
 -- emphasis on being human readable. Useful for the REPL.
@@ -75,7 +75,7 @@ instance Pretty Castle where
 
 -- | This should eventually look something more like "a1->b2".
 instance Pretty Ply where
-  pretty (Move s t) = buildBoard $ (fromMask "s" s) ++ (fromMask "t" t)
+  pretty (Move _ _ s t) = buildBoard $ (fromMask "s" s) ++ (fromMask "t" t)
 
 instance Pretty a => Pretty [a] where
   pretty xs = concat $ intersperse "\n" (map pretty xs)

@@ -8,10 +8,11 @@
 
 module Game.SlowChess.Game where
 
-import Game.SlowChess.Piece
-import Game.SlowChess.Board
-import Game.SlowChess.Game.Internal
+import           Game.SlowChess.Board
+import           Game.SlowChess.Game.Internal
+import           Game.SlowChess.Piece
 
+-- | Tracks all the state around a game of chess.
 new :: Game
 new = Game { player    = White
            , board     = starting
