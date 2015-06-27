@@ -17,7 +17,7 @@ To Do List
 * Special piece movement.
     * ~~Castling~~
     * ~~Promotion~~
-    * /En passant/
+    * *En passant*
 * Game AI — Negamax?
 * Game UI — The `/cli/` directory and executable are for this.
 * Algebraic Chess Notation support — It might be nice to manipulate games.
