@@ -1,6 +1,6 @@
 -- |
 -- Module      : Game.SlowChess.Move
--- Description : Movement definition for both basic and special movements.
+-- Description : Movement definitions.
 -- License     : MIT License
 -- Maintainer  : Isaac Azuelos
 --
@@ -11,17 +11,50 @@
 -- current board. For more information on this issue, and how it's being
 -- worked around, see the note in 'Game.SlowChess.Game.Internal'.
 --
--- This module contains all the non-special movements. Special movements can
--- be found in 'Game.SlowChess.Move.Special'. Tools for writing your own
--- movements can be found in 'Game.SlowChess.Move.Internal'.
+-- This module contains /all/ movements. Tools for writing movements can be
+-- found in 'Game.SlowChess.Move.Internal'.
 
-module Game.SlowChess.Move () where
+module Game.SlowChess.Move where
 
 import           Game.SlowChess.Board
-import           Game.SlowChess.Mask
+import           Game.SlowChess.Coord
 import           Game.SlowChess.Piece
 
+import           Game.SlowChess.Game.Internal
 import           Game.SlowChess.Move.Internal
+
+-- * All movements
+
+-- | Return all legal plys to an existing game.
+moves :: Game -> [Ply]
+moves = undefined
+
+-- * Special
+
+-- | The rules are a little weird, but here's my take on what Wikipedia says.
+-- <https://en.wikipedia.org/wiki/En_passant>
+--
+-- After a pawn steps twice, if it could be attacked by another pawn had it
+-- stepped once, then it can be captured as if it had stepped once --- the
+-- attacker moves to the square stepped over but the pawn is still captured.
+enPassant :: Game -> [Ply]
+enPassant = undefined
+
+
+
+-- | Is the a game in check?
+inCheck :: Game -> Bool
+inCheck = undefined
+
+-- | Is the game won?
+inCheckmate :: Game -> Bool
+inCheckmate = undefined
+
+-- * Simple Movements
+
+-- | Wrap a simple movement to give it the signature of a special movement.
+wrapSimple :: (Colour -> Board -> [Ply]) -> Game -> [Ply]
+wrapSimple = undefined
 
 -- | Generates all the valid movements of the king of a colour on a
 -- board. Kings can move in any direction so long as they stay on the board
@@ -47,7 +80,7 @@ moveKnights c b = do source    <- each c Knight b
 
 -- | For a knight at a coordinate, it gives all coordinates that it could jump
 -- to --- even if that means jumping off the board.
-knightHops ::  Mask -> [Mask]
+knightHops ::  Coord -> [Coord]
 knightHops m = map (`hopBy` m) dirs
  where dirs = [(N,E), (E,N), (E,S), (S,E), (S,W), (W,S), (W,N), (N,W)]
        hopBy (a,b) = hop a . hop a . hop b
@@ -70,11 +103,10 @@ moveBishops = moveByCasting [NE, SE, NW, SW] Bishop
 moveQueens :: Colour -> Board -> [Ply]
 moveQueens = moveByCasting allDirections Queen
 
--- TODO: update 'elsewhere' to location
 -- | Generates *some* the valid movements of the pawns of a colour on a board.
 -- Pawn motion is the most complicated. Below are the rules governing pawn
 -- movement as implemented here. Some more special rules that require more
--- information about game state and history are elsewhere.
+-- information about game state and history are elsewhere in this module.
 --
 -- * Pawns can only move /forward/, i.e. along their files away from the rank
 --   that the king of the same colour started on.
@@ -97,6 +129,7 @@ movePawns c b = captures ++ stepOnce ++ stepTwice
         stepOnce  = do source <- each c Pawn b
                        target <- step c b (forward c) source
                        return $ Move c Pawn source target
+        -- TODO: Right now it can step twice from any rank. Need to filter.
         stepTwice = do source <- each c Pawn b
                        step1  <- step c b (forward c) source
                        target <- step c b (forward c) step1

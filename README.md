@@ -28,24 +28,11 @@ To Do List
 
 ### To Fix
 
+* Make `Game.SlowChess.Board` use `Coord`s.
 * Add tests for older modules
     * `Game.SlowChess.Movement` — Expand the tests to cover the piece-specific
       move functions against the rules in the documentation.
     * `Game.SlowChess.Mask` — There are a bunch of declared properties in the
-	  documentation that could be tested with QuickCheck (mostly) easily.
+       documentation that could be tested with QuickCheck (mostly) easily.
     * `Game.SlowChess.Board`
-	* `Game.SlowChess.Piece`, although I'm not sure there's much to test.
-* Extend the documentation for `Game.SlowChess.Movement.movePawn` with links
-  to where special pawn movement is documented.
-
-### To maybe fix?
-
-Right now, non-special movement is done almost entierly though functions that
-take a board and yeild a list of boards. It might be worth trying functions
-that yeild a list of possible moves, which then get filtered based on when the
-move is valid --- eventually applying the valid moves to generate the new
-boards. I have no idea about performance considerations either way, but I
-think it'd likely be cleaner code --- especially later when the reading and
-writing games move-by-move. There should *definitly* be a solid movement test
-suite before this is attempted.
-
+    * `Game.SlowChess.Piece`, although I'm not sure there's much to test.

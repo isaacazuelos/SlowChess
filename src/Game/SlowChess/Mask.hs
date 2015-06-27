@@ -18,7 +18,7 @@ module Game.SlowChess.Mask ( -- * Constructing Masks
                            , both
                            , minus
                            , invert
-                           , split
+                           , submask
                              -- * Movement
                            , hop
                            ) where
@@ -103,10 +103,13 @@ minus a b = a .&. complement b
 invert :: Mask -> Mask
 invert = complement
 
--- | Split a mask with multiple pieces into a list of masks with one position
--- occupied each.
-split :: Mask -> [Mask]
-split = map maskFromIndex . toList
+-- | Is one mask contained in the other?
+--
+-- > 0 0 0           1 0 1
+-- > 0 1 0 `submask` 0 1 0 = True
+-- > 0 0 0           1 0 1
+submask :: Mask -> Mask -> Bool
+submask a b = b == a <> b
 
 -- ** Movement
 
