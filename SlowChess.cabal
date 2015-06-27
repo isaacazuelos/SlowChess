@@ -28,6 +28,7 @@ library
         Game.SlowChess.Move
         Game.SlowChess.Move.Internal
         Game.SlowChess.Move.Castle
+        Game.SlowChess.Move.Promotion
         Game.SlowChess.Piece
         Game.SlowChess.Pretty
         Game.SlowChess.Game

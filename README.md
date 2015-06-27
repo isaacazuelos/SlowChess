@@ -5,11 +5,6 @@ A chess engine in Haskell with no great emphasis on anything.
 
 It's still *very* early in development, so there's nothing much to see.
 
-In Progress
------------
-
-Sketching out what a is meant by a *game* has started, but isn't nearly complete.
-
 To Do List
 ----------
 
@@ -18,8 +13,11 @@ To Do List
 * ~~Basic Chess Terms~~
 * ~~Board Representation~~
 * ~~Basic piece movement~~
-* ~~Build a concept of a *game*~~
+* ~~Sketch a concept of a *game*~~
 * Special piece movement.
+    * ~~Castling~~
+    * ~~Promotion~~
+    * /En passant/
 * Game AI — Negamax?
 * Game UI — The `/cli/` directory and executable are for this.
 * Algebraic Chess Notation support — It might be nice to manipulate games.
@@ -29,10 +27,4 @@ To Do List
 ### To Fix
 
 * Make `Game.SlowChess.Board` use `Coord`s.
-* Add tests for older modules
-    * `Game.SlowChess.Movement` — Expand the tests to cover the piece-specific
-      move functions against the rules in the documentation.
-    * `Game.SlowChess.Mask` — There are a bunch of declared properties in the
-       documentation that could be tested with QuickCheck (mostly) easily.
-    * `Game.SlowChess.Board`
-    * `Game.SlowChess.Piece`, although I'm not sure there's much to test.
+* Add tests for modules once the interfaces solidify a bit.

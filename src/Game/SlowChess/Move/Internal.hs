@@ -23,6 +23,7 @@ import           Game.SlowChess.Piece
 data Ply = Move      Colour Piece Coord Coord -- ^ player piece source target
          | EnPassant Colour Coord Coord Coord -- ^ player source target cap
          | Castle    Colour Side              -- ^ player side
+         | Promotion Colour Piece Coord Coord -- ^ player piece source target
            deriving (Show, Eq)
 
 -- | Colour-relative board sides, used for knowing which side a castle move
@@ -37,6 +38,22 @@ moveByCasting ds p c b = do direction <- ds
                             source    <- each c p b
                             target    <- cast c b direction source
                             return $ Move c p source target
+
+-- Where the target square of a ply is, assuming that makes sense for the type
+-- of movement.
+targetOf :: Ply -> Maybe Coord
+-- It's named `targtOf` rather than `target` since a log of exising code uses
+-- `target` as an identifier. TODO: fix this
+targetOf (Move _ _ s _) = Just s
+targetOf _ = Nothing
+
+-- | Return the type of piece that moved in a ply, if that makes sense.
+-- Castling and doesn't have a clear piece.
+piece :: Ply -> Maybe Piece
+piece (Move      _ p _ _) = Just p
+piece (Promotion _ p _ _) = Just p
+piece (EnPassant _ _ _ _) = Just Pawn
+piece _ = Nothing
 
 -- | Does a ply's target move it to any of the places indicated in the mask?
 -- Typically this is used with the mask as a filter for to pick out blanks or
