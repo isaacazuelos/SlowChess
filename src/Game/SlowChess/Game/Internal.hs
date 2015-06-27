@@ -23,30 +23,13 @@
 
 module Game.SlowChess.Game.Internal where
 
-import Game.SlowChess.Board
-import Game.SlowChess.Piece
+import           Game.SlowChess.Board
+import           Game.SlowChess.Piece
+import           Game.SlowChess.Move.Internal
 
 -- | A raw game state. Since this is still being sketched, this is
 -- likely to change a lot over the next few commits.
-data Game = Game { player    :: Colour
-                 , board     :: Board
-                 , condition :: Condition
-                 , castle    :: Castle
-                 , history   :: [Game]
+data Game = Game { player  :: Colour
+                 , board   :: Board
+                 , history :: [(Board, Ply)]
                  } deriving (Show, Eq)
-
--- | Information about weather castling is allowed for each player.
-data Castle = Castle Bool Bool deriving (Show, Eq)
-
--- | Can white castle?
-whiteCastle :: Castle -> Bool
-whiteCastle (Castle w _) = w
-
--- | Can black castle?
-blackCastle :: Castle -> Bool
-blackCastle (Castle _ b) = b
-
--- | The conditions a game can be in, where 'Normal' is just the
--- normal play state, or the absence of any sort of check state.
-data Condition = Normal | Check | Checkmate deriving (Show, Eq)
-

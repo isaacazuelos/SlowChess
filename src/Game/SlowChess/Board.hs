@@ -15,11 +15,12 @@ module Game.SlowChess.Board ( -- * Board Creation
                               -- * Modification
                             , get
                             , set
+                            , update
                               -- * Operations
                             , material
                             , blanks
+                            , nonFriendly
                             , conflicts
-                            , remove
                             ) where
 
 import           Data.Monoid          ((<>))
@@ -54,6 +55,11 @@ material Black = blacks
 blanks :: Board -> Mask
 blanks b = invert (material White b <> material Black b)
 
+-- | All of the squares not held by pieces of a colour --- so either
+-- blanks or enemy pieces.
+nonFriendly :: Colour -> Board -> Mask
+nonFriendly c b = invert (material c b)
+
 -- | A blank board is the board with no pieces on it.
 blank :: Board
 blank = Board 0 0 0 0 0 0 0 0
@@ -82,12 +88,12 @@ get c Queen  b = both (material c b) (queens  b)
 get c King   b = both (material c b) (kings   b)
 get c Pawn   b = both (material c b) (pawns   b)
 
--- | Update the positions of a type of piece (of a colour) on a board. Unlike
+-- | Modify the positions of a type of piece (of a colour) on a board. Unlike
 -- '@set@' this does not attempt to capture other types of pieces, and can
 -- lead to invalid board states if incorrectly used — that's why it's not
 -- exposed.
-update :: Colour -> Piece -> Board -> Mask -> Board
-update c p b m = case c of
+modify :: Colour -> Piece -> Board -> Mask -> Board
+modify c p b m = case c of
     White -> (updatePieces m c p b) { whites = newMaterial }
     Black -> (updatePieces m c p b) { blacks = newMaterial }
   where newMaterial      = m <> (material c b `minus` get c p b)
@@ -117,8 +123,9 @@ conflicts (Board a b c d e f g h) = foldr xor 0 [a, b, c, d, e, f, g, h]
 -- | Set the positions of a type of piece on a board, ensuring that no other
 -- type of piece is at that position.
 set :: Colour -> Piece -> Board -> Mask -> Board
-set c p b m = update c p (forEach b (`minus` m)) m
+set c p b m = modify c p (forEach b (`minus` m)) m
 
--- | Remove all the positions marked on a mask from a board.
-remove :: Board -> Mask -> Board
-remove b m = forEach b (`minus` m)
+-- | Update the positions of a type of piece on a board using a function.
+-- This is equivalent to getting, applying the function then setting.
+update :: Colour -> Piece -> Board -> (Mask -> Mask) -> Board
+update c p b f = set c p b (f (get c p b))

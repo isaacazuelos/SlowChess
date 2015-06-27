@@ -6,15 +6,15 @@
 --
 -- Pretty is a tool for pretty printing the chess data types.
 
-module Game.SlowChess.Pretty (Pretty (pretty), pprint, pprintL) where
+module Game.SlowChess.Pretty (Pretty (pretty), pprint) where
 
-import           Data.List            (intersperse, sort)
+import           Data.List                    (intersperse, sort)
 
 import           Game.SlowChess.Board
 import           Game.SlowChess.Mask
+import           Game.SlowChess.Move.Internal
 import           Game.SlowChess.Piece
-import           Game.SlowChess.Game.Internal
-import           Game.SlowChess.Move
+import           Game.SlowChess.Coord
 
 -- | A pretty pretty printing typeclass like @Show@, but with more of an
 -- emphasis on being human readable. Useful for the REPL.
@@ -58,32 +58,21 @@ instance Pretty Board where
                                 , fromMask "p" $ get White Pawn   b
                                 ])
 
--- | Pretty print a game
-instance Pretty Game where
-  pretty (Game p b co ca h) = pretty b ++
-                          "\n  player: " ++ show p ++
-                          "\n  condition: " ++ show co ++
-                          "\n  caslting: " ++ pretty ca ++
-                          "\n  moves: " ++ (show . length) h
-
--- | Castling state is pretty printed in just a nicer english representation.
-instance Pretty Castle where
-  pretty (Castle True True)   = "both"
-  pretty (Castle True False)  = "only white"
-  pretty (Castle False True)  = "only black"
-  pretty (Castle False False) = "neither"
-
+-- | Print a coord as it's nice name.
+instance Pretty Coord where
+  pretty c = show (name c)
 -- | This should eventually look something more like "a1->b2".
 instance Pretty Ply where
-  pretty (Move s t) = buildBoard $ (fromMask "s" s) ++ (fromMask "t" t)
+  pretty (Move _ _ s t) = buildBoard $ fromMask "s" (mask s) ++
+                                       fromMask "t" (mask t)
+  pretty _ = "not implemented"
+
+instance Pretty a => Pretty [a] where
+  pretty xs = concat $ intersperse "\n" (map pretty xs)
 
 -- | Like 'print' but it uses 'Pretty' rather than 'Show'.
 pprint :: Pretty a => a -> IO ()
 pprint = putStrLn . pretty
-
--- | `pprint` each element in a list.
-pprintL :: Pretty a => [a] -> IO ()
-pprintL = mapM_ (putStrLn . pretty)
 
 -- | A tile is a board index followed by the string we'll use to represent
 -- what is occupying that index.
