@@ -1,11 +1,11 @@
 module Main where
 
-import qualified MovementTests (tests)
+import Test.Framework (defaultMain, Test)
 
-import           Test.Tasty
+import qualified CoordTests as Coord (tests)
 
 main :: IO ()
 main = defaultMain tests
 
-tests :: TestTree
-tests = testGroup "Tests" [MovementTests.tests]
+tests :: [Test]
+tests = [ Coord.tests ]
