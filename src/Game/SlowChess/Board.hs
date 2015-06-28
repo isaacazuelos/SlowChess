@@ -8,8 +8,7 @@
 -- they're occupied by.
 
 module Game.SlowChess.Board ( -- * Board Creation
-                              Board ( pawns, rooks, knights, bishops
-                                    , kings, queens, whites, blacks)
+                              Board
                             , blank
                             , starting
                               -- * Modification
@@ -25,7 +24,8 @@ module Game.SlowChess.Board ( -- * Board Creation
 
 import           Data.Monoid          ((<>))
 
-import           Game.SlowChess.Mask
+import           Game.SlowChess.Coord
+import           Game.SlowChess.Mask  hiding (fromList)
 import           Game.SlowChess.Piece
 
 -- * Board
@@ -41,10 +41,7 @@ data Board = Board { pawns   :: Mask
                    , queens  :: Mask
                    , whites  :: Mask
                    , blacks  :: Mask
-                   } deriving ( Show
-                              , Eq
-                              , Ord -- Debugging, not scoring
-                              )
+                   } deriving ( Show, Eq )
 
 -- | All of the positions held by pieces of a colour.
 material :: Colour -> Board -> Mask
@@ -66,14 +63,14 @@ blank = Board 0 0 0 0 0 0 0 0
 
 -- | A board with the pieces in their starting positions.
 starting :: Board
-starting = Board { rooks   = fromList [0,7,56,63]
-                 , knights = fromList [1,6,57,62]
-                 , bishops = fromList [2,5,58,61]
-                 , kings   = fromList [4,59]
-                 , queens  = fromList [3,60]
-                 , pawns   = fromList ([48..55] ++ [8..15])
-                 , whites  = fromList [0..15]
-                 , blacks  = fromList [48..63]
+starting = Board { rooks   = fromList  [A1, H1, A8, H8]
+                 , knights = fromList  [B1, G1, B8, G8]
+                 , bishops = fromList  [C1, F1, C8, F8]
+                 , kings   = fromList  [E1, E8]
+                 , queens  = fromList  [D1, D8]
+                 , pawns   = fromList ([A2 .. H2] ++ [A7 .. H7])
+                 , whites  = fromList  [A1 .. H2]
+                 , blacks  = fromList  [A7 .. H8]
                  }
 
 -- | Gets a mask of the locations of a particular type of piece of one colour.
@@ -108,7 +105,7 @@ modify c p b m = case c of
 
 -- | Apply a mask transformation to each mask in mask in the board — even the
 -- material masks.
-forEach :: Board -> (Mask -> Mask) -> Board -- TODO: This is just fmap?
+forEach :: Board -> (Mask -> Mask) -> Board
 forEach (Board a b c d e f g h) f' = Board (f' a) (f' b) (f' c) (f' d)
                                            (f' e) (f' f) (f' g) (f' h)
 

@@ -27,5 +27,4 @@ To Do List
 
 ### To Fix
 
-* Make `Game.SlowChess.Board` use `Coord`s.
 * Add tests for modules once the interfaces solidify a bit.
