@@ -20,7 +20,7 @@
 -- This module only checks teh first two rules and assumes that the board
 -- started in the typical starting position.
 
-module Game.SlowChess.Move.Castle (castle) where
+module Game.SlowChess.Move.Castle ( castle ) where
 
 import           Control.Monad                (guard)
 
@@ -32,7 +32,7 @@ import           Game.SlowChess.Piece
 import           Game.SlowChess.Game.Internal
 import           Game.SlowChess.Move.Internal
 
--- | Returns the castling moves for a game,  even those that would put the
+-- | Returns the castling moves for a game, even those that would put the
 -- player in check. This checks the other rules. Note that castling only make
 -- sense if the game started in the starting position, so this function
 -- assumes that.

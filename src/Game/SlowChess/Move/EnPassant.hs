@@ -11,7 +11,7 @@
 -- stepped once, then it can be captured as if it had stepped once --- the
 -- attacker moves to the square stepped over but the pawn is still captured.
 
-module Game.SlowChess.Move.EnPassant where
+module Game.SlowChess.Move.EnPassant (enPassant) where
 
 import           Control.Monad                (mzero)
 
