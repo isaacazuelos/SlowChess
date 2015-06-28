@@ -20,7 +20,7 @@ source-repository head
 
 library
     build-depends:
-        base >= 4 && < 5
+        base >=4 && <5
     exposed-modules:
         Game.SlowChess.Board
         Game.SlowChess.Coord
@@ -29,6 +29,7 @@ library
         Game.SlowChess.Move.Internal
         Game.SlowChess.Move.Castle
         Game.SlowChess.Move.Promotion
+        Game.SlowChess.Move.EnPassant
         Game.SlowChess.Piece
         Game.SlowChess.Pretty
         Game.SlowChess.Game
@@ -41,24 +42,10 @@ library
 
 executable slowchess
     build-depends:
-        SlowChess,
-        base >= 4 && < 5
+        SlowChess -any,
+        base >=4 && <5
     main-is: Main.hs
     buildable: True
     default-language: Haskell2010
     hs-source-dirs: cli
     ghc-options: -Wall
-
--- test-suite tests
---     build-depends:
---         slowchess -any,
---         tasty,
---         containers,
---         tasty-hunit,
---         base
---     type: exitcode-stdio-1.0
---     main-is: tests.hs
---     buildable: True
---     default-language: Haskell2010
---     hs-source-dirs: tests
---     ghc-options: -Wall

@@ -14,10 +14,11 @@ To Do List
 * ~~Board Representation~~
 * ~~Basic piece movement~~
 * ~~Sketch a concept of a *game*~~
-* Special piece movement.
+* ~~Special piece movement.~~
     * ~~Castling~~
     * ~~Promotion~~
-    * *En passant*
+    * ~~*En passant*~~
+* Sketch tools for working with game trees.
 * Game AI — Negamax?
 * Game UI — The `/cli/` directory and executable are for this.
 * Algebraic Chess Notation support — It might be nice to manipulate games.
