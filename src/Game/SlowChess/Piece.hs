@@ -6,7 +6,7 @@
 --
 -- Basic chess terms.
 
-module Game.SlowChess.Piece where -- all symbols are exported
+module Game.SlowChess.Piece where
 
 -- | There are two colours used in Chess, white and black. They have names and
 -- are not equal.
@@ -48,3 +48,13 @@ rev NW = SE
 -- | All of the directions in a list.
 allDirections :: [Direction]
 allDirections = [N, NE, E, SE, S, SW, W, NW]
+
+-- | The /forward/ direction as used by pawn motions.
+forward :: Colour -> Direction
+forward White = N
+forward Black = S
+
+-- | The directions the pawns of a colour can attack.
+forwardAttack :: Colour -> [Direction]
+forwardAttack White = [NE, NW]
+forwardAttack Black = [SE, SW]

@@ -11,8 +11,9 @@
 -- current board. For more information on this issue, and how it's being
 -- worked around, see the note in 'Game.SlowChess.Game.Internal'.
 --
--- This module contains /all/ movements. Tools for writing movements can be
--- found in 'Game.SlowChess.Move.Internal'.
+-- This module contains simple movements. The special movements are in their
+-- own modules. Tools for writing movements can be found in
+-- 'Game.SlowChess.Move.Internal'.
 
 module Game.SlowChess.Move where
 
@@ -30,17 +31,6 @@ moves :: Game -> [Ply]
 moves = undefined
 
 -- * Special
-
--- | The rules are a little weird, but here's my take on what Wikipedia says.
--- <https://en.wikipedia.org/wiki/En_passant>
---
--- After a pawn steps twice, if it could be attacked by another pawn had it
--- stepped once, then it can be captured as if it had stepped once --- the
--- attacker moves to the square stepped over but the pawn is still captured.
-enPassant :: Game -> [Ply]
-enPassant = undefined
-
-
 
 -- | Is the a game in check?
 inCheck :: Game -> Bool
@@ -133,14 +123,4 @@ movePawns c b = captures ++ stepOnce ++ stepTwice
         stepTwice = do source <- each c Pawn b
                        step1  <- step c b (forward c) source
                        target <- step c b (forward c) step1
-                       return $ Move c Pawn source target
-
--- | The /forward/ direction as used by pawn motions.
-forward :: Colour -> Direction
-forward White = N
-forward Black = S
-
--- | The directions the pawns of a colour can attack.
-forwardAttack :: Colour -> [Direction]
-forwardAttack White = [NE, NW]
-forwardAttack Black = [SE, SW]
+                       return $ StepTwice c source target step1
