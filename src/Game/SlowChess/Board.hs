@@ -15,6 +15,7 @@ module Game.SlowChess.Board ( -- * Board Creation
                             , get
                             , set
                             , update
+                            , setMany
                               -- * Operations
                             , material
                             , blanks
@@ -118,7 +119,7 @@ conflicts (Board a b c d e f g h) = foldr xor 0 [a, b, c, d, e, f, g, h]
   where xor p q = both (p <> q) (invert (both p q))
 
 -- | Set the positions of a type of piece on a board, ensuring that no other
--- type of piece is at that position.
+-- type of piece is at that position by overwriting them.
 set :: Colour -> Piece -> Board -> Mask -> Board
 set c p b m = modify c p (forEach b (`minus` m)) m
 
@@ -126,3 +127,9 @@ set c p b m = modify c p (forEach b (`minus` m)) m
 -- This is equivalent to getting, applying the function then setting.
 update :: Colour -> Piece -> Board -> (Mask -> Mask) -> Board
 update c p b f = set c p b (f (get c p b))
+
+-- | Set a bunch of pieces up at once. This function is designed to make it
+-- easy to write Haskell to set up custom boards. Like 'set' it prevents
+-- conflicts -- later elements in the list override earlier ones.
+setMany :: Board -> [(Colour, Piece, [CoordName])] -> Board
+setMany = foldl (\ b' (c, p, ns) -> set c p b' (fromList ns))

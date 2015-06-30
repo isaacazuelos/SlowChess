@@ -45,7 +45,7 @@ moveByCasting ds p c b = do direction <- ds
 targetOf :: Ply -> Maybe Coord
 -- It's named `targtOf` rather than `target` since a log of exising code uses
 -- `target` as an identifier. TODO: fix this
-targetOf (Move _ _ s _) = Just s
+targetOf (Move _ _ _ t) = Just t
 targetOf _ = Nothing
 
 -- | Return the type of piece that moved in a ply, if that makes sense.
@@ -92,8 +92,3 @@ cast c b d s = do candidate <- step c b d s
 -- own.
 each :: Colour -> Piece -> Board -> [Coord]
 each c p b = split (get c p b)
-
--- | Change a board by applying the move from a ply.
-apply :: Board -> Ply -> Board
-apply b (Move c p s t) = update c p b (\ m -> mask t <> m `minus` mask s)
-apply b _ = b -- TODO: Update this for other move types.
