@@ -37,7 +37,10 @@ import qualified Game.SlowChess.Mask as M
 
 -- | Just like a 'Mask' that contains at most one piece marked. Coords can
 -- also be /off board/ in certain circumstances --- say after a 'hop'.
-newtype Coord = Coord M.Mask deriving ( Show, Eq )
+newtype Coord = Coord M.Mask deriving ( Eq )
+
+instance Show Coord where
+    show = show . name
 
 -- | The coordinates are ordered, as given by the diagrams in 'Mask'.
 instance Enum Coord where

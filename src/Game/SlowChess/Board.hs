@@ -42,7 +42,27 @@ data Board = Board { pawns   :: Mask
                    , queens  :: Mask
                    , whites  :: Mask
                    , blacks  :: Mask
-                   } deriving ( Show, Eq )
+                   } deriving ( Eq )
+
+-- | Boards are prettied like masks, but with the Unicode characters for the
+-- chess pieces to show which piece occupies a square.
+instance Show Board where
+ show b = if conflicts b /= 0
+              then "Invalid Board."
+              else buildBoardString (concat
+                    [ boardStringTiles "R" $ get Black Rook   b
+                    , boardStringTiles "H" $ get Black Knight b
+                    , boardStringTiles "B" $ get Black Bishop b
+                    , boardStringTiles "Q" $ get Black Queen  b
+                    , boardStringTiles "K" $ get Black King   b 
+                    , boardStringTiles "P" $ get Black Pawn   b
+                    , boardStringTiles "r" $ get White Rook   b
+                    , boardStringTiles "h" $ get White Knight b
+                    , boardStringTiles "b" $ get White Bishop b
+                    , boardStringTiles "q" $ get White Queen  b
+                    , boardStringTiles "k" $ get White King   b
+                    , boardStringTiles "p" $ get White Pawn   b
+                    ])
 
 -- | All of the positions held by pieces of a colour.
 material :: Colour -> Board -> Mask

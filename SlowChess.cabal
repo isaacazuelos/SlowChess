@@ -31,7 +31,6 @@ library
         Game.SlowChess.Move.Promotion
         Game.SlowChess.Move.EnPassant
         Game.SlowChess.Piece
-        Game.SlowChess.Pretty
         Game.SlowChess.Game
         Game.SlowChess.Game.Internal
     exposed: True

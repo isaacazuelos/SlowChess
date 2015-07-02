@@ -9,8 +9,6 @@ module Game.SlowChess.Move.Internal where
 
 import           Control.Monad        (mzero)
 
-import           Data.Monoid          ((<>))
-
 import           Game.SlowChess.Board
 import           Game.SlowChess.Coord
 import           Game.SlowChess.Mask  hiding (hop)
@@ -21,11 +19,11 @@ import           Game.SlowChess.Piece
 --   * When a 'Move' happens, the source becomes blank and the target is
 --     overwritten with the piece moved.
 data Ply = Move      Colour Piece Coord Coord -- ^ player piece source target
+         | Promotion Colour Piece Coord Coord -- ^ player piece source target
          | EnPassant Colour Coord Coord Coord -- ^ player source target cap
          | StepTwice Colour Coord Coord Coord -- ^ player source target cap
          | Castle    Colour Side              -- ^ player side
-         | Promotion Colour Piece Coord Coord -- ^ player piece source target
-           deriving (Show, Eq)
+           deriving ( Show, Eq )
 
 -- | Colour-relative board sides, used for knowing which side a castle move
 -- was done to.
@@ -40,7 +38,7 @@ moveByCasting ds p c b = do direction <- ds
                             target    <- cast c b direction source
                             return $ Move c p source target
 
--- Where the target square of a ply is, assuming that makes sense for the type
+-- | Where the target square of a ply is, assuming that makes sense for the type
 -- of movement.
 targetOf :: Ply -> Maybe Coord
 -- It's named `targtOf` rather than `target` since a log of exising code uses
@@ -53,7 +51,8 @@ targetOf _ = Nothing
 piece :: Ply -> Maybe Piece
 piece (Move      _ p _ _) = Just p
 piece (Promotion _ p _ _) = Just p
-piece (EnPassant _ _ _ _) = Just Pawn
+piece (StepTwice {}) = Just Pawn
+piece (EnPassant {}) = Just Pawn
 piece _ = Nothing
 
 -- | Does a ply's target move it to any of the places indicated in the mask?
