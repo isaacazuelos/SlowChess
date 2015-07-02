@@ -1,16 +1,13 @@
 module CoordTests (tests) where
 
-import           Test.Framework                      (Test, testGroup)
-import           Test.Framework.Providers.HUnit
-import           Test.Framework.Providers.QuickCheck (testProperty)
-
-import           Test.HUnit                          (Assertion, (@=?))
-import           Test.QuickCheck
+import           Test.Tasty
+import           Test.Tasty.HUnit
+import           Test.Tasty.QuickCheck
 
 import           Game.SlowChess.Coord
 import           Game.SlowChess.Piece
 
-tests :: Test
+tests :: TestTree
 tests = testGroup "Coord Tests"
             [ testProperty "Test Coord--Coordname Enums" testEnums
             , testProperty "Test Coord hopping"          testHop
