@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
-module FIDE (tests) where
+module FIDETests (tests) where
 
 import           Test.Tasty                    (testGroup)
 import           Test.Tasty.HUnit              (assert, testCase, (@?=))

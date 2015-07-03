@@ -21,9 +21,7 @@ module Game.SlowChess.Mask ( -- * Constructing Masks
                            , submask
                              -- * Movement
                            , hop
-                             -- * Printing
-                             --
-                             -- someting?
+                             -- * Printing tools
                            , BoardStringTile
                            , buildBoardString
                            , boardStringTiles
