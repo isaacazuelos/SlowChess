@@ -15,8 +15,6 @@ module Game.SlowChess.Move.EnPassant (enPassant) where
 
 import           Control.Monad                (mzero)
 
-import           Game.SlowChess.Coord
-
 import           Game.SlowChess.Game.Internal
 import           Game.SlowChess.Move.Internal
 import           Game.SlowChess.Piece

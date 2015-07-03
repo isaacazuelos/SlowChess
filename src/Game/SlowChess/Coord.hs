@@ -44,7 +44,7 @@ instance Show Coord where
 
 -- | The coordinates are ordered, as given by the diagrams in 'Mask'.
 instance Enum Coord where
-    toEnum   n = Coord (M.Mask (2^n))
+    toEnum n = Coord (M.Mask (2^n))
     fromEnum (Coord m) = if null lst then fromEnum OffBoard else head lst
       where lst = M.toList m
 

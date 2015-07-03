@@ -20,7 +20,6 @@ module Game.SlowChess.Board ( -- * Board Creation
                             , material
                             , blanks
                             , nonFriendly
-                            , conflicts
                             ) where
 
 import           Data.Monoid          ((<>))

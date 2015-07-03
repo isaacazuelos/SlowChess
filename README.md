@@ -1,9 +1,9 @@
 SlowChess
 =========
 
-A chess engine in Haskell with no great emphasis on anything.
+A chess engine in Haskell. Built to learn more about Haskell and it's tooling.
 
-It's still *very* early in development, so there's nothing much to see.
+It's still early in development.
 
 To Do List
 ----------
@@ -24,7 +24,3 @@ To Do List
 * Algebraic Chess Notation support — It might be nice to manipulate games.
 * Profiling — I'd like to learn more about profiling in Haskell.
 * Benchmarking — I'd also like to try to set up some benchmarks.
-
-### To Fix
-
-I'm sure something will show up.
