@@ -83,18 +83,18 @@ knightHops m = map (`hopBy` m) dirs
 -- either where they choose, after capturing a single enemy unit, before they
 -- run off the board, or before they hit a friendly unit.
 moveRooks :: Colour -> Board -> [Ply]
-moveRooks = moveByCasting [N, S, E, W] Rook
+moveRooks = cast [N, S, E, W] Rook
 
 -- | Generates all the valid movements of the bishops of a colour on a board.
 -- Bishops move diagonally, under the same conditions as rooks.
 moveBishops :: Colour -> Board -> [Ply]
-moveBishops = moveByCasting [NE, SE, NW, SW] Bishop
+moveBishops = cast [NE, SE, NW, SW] Bishop
 
 -- | Generates all the valid movements of the queens of a colour on a board.
 -- Queens can move either like rooks or like bishops — either straight or at a
 -- diagonal.
 moveQueens :: Colour -> Board -> [Ply]
-moveQueens = moveByCasting allDirections Queen
+moveQueens = cast allDirections Queen
 
 -- | Generates *some* the valid movements of the pawns of a colour on a board.
 -- Pawn motion is the most complicated. Below are the rules governing pawn

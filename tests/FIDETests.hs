@@ -36,7 +36,7 @@ article3 = testGroup "Article 3" [ testBishopMove
 
 -- | Collects the targets of some 'Move's into a mask, just a helper.
 targets :: [Ply] -> Mask
-targets = foldl (\ a m -> a <> maybe 0 mask (targetOf m)) 0
+targets = foldl (\ a m -> a <> maybe 0 mask (destination m)) 0
 
 testBishopMove = testCase "3.2 - Bishops move diagonally" (result @?= expected)
   where result   = targets $ moveBishops Black b
