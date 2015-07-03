@@ -92,10 +92,10 @@ split :: M.Mask -> [Coord]
 split m = map (toEnum . fromEnum) (M.toList m)
 
 -- | Are the tiles of the 'Coord' marked on the 'Mask'?
--- Returns 'False' if the Coord is None since that already means the piece
+-- Returns 'False' if the Coord is OffBoard since that already means the piece
 -- is off the board.
 on :: Coord -> M.Mask -> Bool
-on (Coord c) m = M.both c m == m
+on (Coord c) m = c `M.submask` m && c /= 0
 
 -- |  Hop moves the piece in the specified direction.
 --

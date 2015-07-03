@@ -124,7 +124,7 @@ testPawnStep = testCase "3.7.a - Panws moving one square"
 
 testPawnStepTwice :: TestTree
 -- Note that this is likely to fail if 'testPawnStep' does too.
-testPawnStepTwice = testCase "3.7.b - Pawns at starting posiiton move twice"
+testPawnStepTwice = testCase "3.7.b - Pawns at starting position move twice"
                         (result @?= fromList [C3, C4])
   where result = targets (movePawns White pawnTestBoard1)
 
@@ -135,15 +135,15 @@ testPawnAttack = testCase "3.7.c - Pawns attack diagonally forward"
 
 testEnPassant :: TestTree
 testEnPassant = testCase "3.7.d - En passant moves"
-                 (result @?= fromList [E6, D6])
-  where oldBoard = setMany blank [ (Black, Pawn, [E7])
+                 (enPassant game @?= expected)
+  where expected = [EnPassant White (coord D5) (coord E6) (coord E5)]
+        oldBoard = setMany blank [ (Black, Pawn, [E7])
                                  , (White, Pawn, [D5])
                                  ]
         lastMove = StepTwice Black (coord E7) (coord E5) (coord E6)
-        result   = targets . enPassant $ game
-        game     = Game { player = Black
-                        , board = setMany blank [ (Black, Pawn, [E5])
-                                                , (White, Pawn, [D5])]
+        game     = Game { player = White
+                        , board = setMany blank [ (White, Pawn, [D5])
+                                                , (Black, Pawn, [E5])]
                         , history = [(oldBoard, lastMove)]
                         }
 
@@ -193,6 +193,16 @@ castleGame c = Game { player = c
                                             ]
                     }
 
+-- Notice that the castling moves relys on the fact (in the documentation)
+-- that movement detection is done by making sure nothing's moved off of the
+-- expected starting square. These aren't great tests, I know.
+
+castleGameWithMoves :: Game
+castleGameWithMoves = (castleGame White) { history = [ (blank, rookMove)
+                                                     , (blank, kingMove) ] }
+  where rookMove = Move White Rook (coord A1) (coord A2)
+        kingMove = Move White King (coord E2) (coord E1)
+
 testBlackKingside :: TestTree
 testBlackKingside = testCase "Black kingside castling" (result @?= expected)
   where result   = castle (castleGame Black)
@@ -205,23 +215,11 @@ testWhiteQueenside = testCase "White queenside castling" (result @?= expected)
 
 testCastleKingMoved :: TestTree
 testCastleKingMoved = testCase "You can't castle if the king has moved"
-    (castle game @?= [])
-  where move = Move White King (coord E2) (coord E1)
-        game = (castleGame White) { history = rewrittenHistory }
-        rewrittenHistory = [(oldBoard,move)]
-        oldBoard = setMany blank [ (Black, King, [E8]), (Black, Rook, [H8])
-                                 , (White, Rook, [A1]), (White, King, [E2])
-                                 ]
+                        (castle castleGameWithMoves @?= [])
 
 testCastleRookMoved :: TestTree
 testCastleRookMoved = testCase "You can't caslte if the rook has moved"
-                        (castle game @?= [])
-  where move = Move White Rook (coord A2) (coord A1)
-        game = (castleGame White) { history = rewrittenHistory }
-        rewrittenHistory = [(oldBoard,move)]
-        oldBoard = setMany blank [ (Black, King, [E8]), (Black, Rook, [H8])
-                                 , (White, Rook, [A2]), (White, King, [E1])
-                                 ]
+                        (castle castleGameWithMoves @?= [])
 
 -- TODO: Implement tests for 3.8.b.2
 -- TODO: Implement tests for 3.9

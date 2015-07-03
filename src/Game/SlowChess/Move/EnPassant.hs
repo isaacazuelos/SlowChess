@@ -15,6 +15,8 @@ module Game.SlowChess.Move.EnPassant (enPassant) where
 
 import           Control.Monad                (mzero)
 
+import           Game.SlowChess.Coord
+
 import           Game.SlowChess.Game.Internal
 import           Game.SlowChess.Move.Internal
 import           Game.SlowChess.Piece
@@ -25,13 +27,10 @@ enPassant :: Game -> [Ply]
 enPassant (Game { player  = c
                 , board   = b
                 , history = (_, StepTwice _ _ t skipped):_
-                }) = do attackDir <- forwardAttack c
-                        source    <- each c Pawn b
+                }) = do source    <- each c Pawn b
+                        attackDir <- forwardAttack c
                         attack    <- step c b attackDir source
-                        -- valid attacks are those which land on the skipped
-                        -- square.
-                        target    <- if attack == skipped
-                                        then return attack
-                                        else mzero
-                        return $ EnPassant c source target t
+                        if attack == skipped
+                            then return $ EnPassant c source skipped t
+                            else mzero
 enPassant _ = []

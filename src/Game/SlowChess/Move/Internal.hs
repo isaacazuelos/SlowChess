@@ -42,8 +42,11 @@ moveByCasting ds p c b = do direction <- ds
 -- of movement.
 targetOf :: Ply -> Maybe Coord
 -- It's named `targtOf` rather than `target` since a log of exising code uses
--- `target` as an identifier. TODO: fix this
-targetOf (Move _ _ _ t) = Just t
+-- `target` as an identifier.
+targetOf (Move      _ _ _ t) = Just t
+targetOf (Promotion _ _ _ t) = Just t
+targetOf (StepTwice _ _ t _) = Just t
+targetOf (EnPassant _ _ t _) = Just t
 targetOf _ = Nothing
 
 -- | Return the type of piece that moved in a ply, if that makes sense.

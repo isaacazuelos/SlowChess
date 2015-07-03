@@ -17,8 +17,11 @@
 
 module Game.SlowChess.Move where
 
+import           Control.Monad (mzero)
+
 import           Game.SlowChess.Board
 import           Game.SlowChess.Coord
+import           Game.SlowChess.Mask  (Mask)
 import           Game.SlowChess.Piece
 
 import           Game.SlowChess.Game.Internal
@@ -119,8 +122,16 @@ movePawns c b = captures ++ stepOnce ++ stepTwice
         stepOnce  = do source <- each c Pawn b
                        target <- step c b (forward c) source
                        return $ Move c Pawn source target
-        -- TODO: Right now it can step twice from any rank. Need to filter.
         stepTwice = do source <- each c Pawn b
                        step1  <- step c b (forward c) source
                        target <- step c b (forward c) step1
-                       return $ StepTwice c source target step1
+                       if (source `on` homeRank c)
+                           && (step1  `on` blanks b)
+                           && (target `on` blanks b)
+                         then return $ StepTwice c source target step1
+                         else mzero
+
+-- | The place where pawns start.
+homeRank :: Colour -> Mask
+homeRank White = get White Pawn starting
+homeRank Black = get Black Pawn starting
