@@ -15,11 +15,12 @@ module Game.SlowChess.Board ( -- * Board Creation
                             , get
                             , set
                             , update
+                            , setMany
+                            , wipe
                               -- * Operations
                             , material
                             , blanks
                             , nonFriendly
-                            , conflicts
                             ) where
 
 import           Data.Monoid          ((<>))
@@ -41,7 +42,27 @@ data Board = Board { pawns   :: Mask
                    , queens  :: Mask
                    , whites  :: Mask
                    , blacks  :: Mask
-                   } deriving ( Show, Eq )
+                   } deriving ( Eq )
+
+-- | Boards are prettied like masks, but with the Unicode characters for the
+-- chess pieces to show which piece occupies a square.
+instance Show Board where
+ show b = if conflicts b /= 0
+              then "Invalid Board."
+              else buildBoardString (concat
+                    [ boardStringTiles "R" $ get Black Rook   b
+                    , boardStringTiles "H" $ get Black Knight b
+                    , boardStringTiles "B" $ get Black Bishop b
+                    , boardStringTiles "Q" $ get Black Queen  b
+                    , boardStringTiles "K" $ get Black King   b 
+                    , boardStringTiles "P" $ get Black Pawn   b
+                    , boardStringTiles "r" $ get White Rook   b
+                    , boardStringTiles "h" $ get White Knight b
+                    , boardStringTiles "b" $ get White Bishop b
+                    , boardStringTiles "q" $ get White Queen  b
+                    , boardStringTiles "k" $ get White King   b
+                    , boardStringTiles "p" $ get White Pawn   b
+                    ])
 
 -- | All of the positions held by pieces of a colour.
 material :: Colour -> Board -> Mask
@@ -118,11 +139,21 @@ conflicts (Board a b c d e f g h) = foldr xor 0 [a, b, c, d, e, f, g, h]
   where xor p q = both (p <> q) (invert (both p q))
 
 -- | Set the positions of a type of piece on a board, ensuring that no other
--- type of piece is at that position.
+-- type of piece is at that position by overwriting them.
 set :: Colour -> Piece -> Board -> Mask -> Board
-set c p b m = modify c p (forEach b (`minus` m)) m
+set c p b m = modify c p (wipe b m) m
+
+-- | Wipe the pieces off some squares.
+wipe :: Board -> Mask -> Board
+wipe b m = forEach b (`minus` m)
 
 -- | Update the positions of a type of piece on a board using a function.
 -- This is equivalent to getting, applying the function then setting.
 update :: Colour -> Piece -> Board -> (Mask -> Mask) -> Board
 update c p b f = set c p b (f (get c p b))
+
+-- | Set a bunch of pieces up at once. This function is designed to make it
+-- easy to write Haskell to set up custom boards. Like 'set' it prevents
+-- conflicts -- later elements in the list override earlier ones.
+setMany :: Board -> [(Colour, Piece, [CoordName])] -> Board
+setMany = foldl (\ b' (c, p, ns) -> set c p b' (fromList ns))

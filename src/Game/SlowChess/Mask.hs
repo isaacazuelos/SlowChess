@@ -21,10 +21,14 @@ module Game.SlowChess.Mask ( -- * Constructing Masks
                            , submask
                              -- * Movement
                            , hop
+                             -- * Printing tools
+                           , BoardStringTile
+                           , buildBoardString
+                           , boardStringTiles
                            ) where
 
 import           Data.Bits
-import           Data.List            ((\\))
+import           Data.List            (intersperse, sort, (\\))
 import           Data.Monoid
 import           Data.Word
 
@@ -46,7 +50,7 @@ import           Game.SlowChess.Piece
 -- >    2 08 09 10 11 12 13 14 15
 -- >    1 00 01 02 03 04 05 06 07
 -- >      a  b  c  d  e  f  g  h
-newtype Mask = Mask Word64 deriving ( Show, Eq, Bits, Num, Ord )
+newtype Mask = Mask Word64 deriving ( Eq, Bits, Num, Ord )
 
 -- | Masks form a monoid where the identity is an empty mask and our operation
 -- preserves the occupied spaces of both operands. Note that this monoid is
@@ -58,6 +62,23 @@ newtype Mask = Mask Word64 deriving ( Show, Eq, Bits, Num, Ord )
 instance Monoid Mask where
   mempty  = 0
   mappend = (.|.)
+
+-- | Masks are prettied using the normal grid, with @#@ indicating an occupied
+-- square.
+--
+-- Here's an example mask with squares along the diagonal occupied.
+--
+-- > 8|#|_|_|_|_|_|_|_|
+-- > 7|_|#|_|_|_|_|_|_|
+-- > 6|_|_|#|_|_|_|_|_|
+-- > 5|_|_|_|#|_|_|_|_|
+-- > 4|_|_|_|_|#|_|_|_|
+-- > 3|_|_|_|_|_|#|_|_|
+-- > 2|_|_|_|_|_|_|#|_|
+-- > 1|_|_|_|_|_|_|_|#|
+-- >   a b c d e f g h
+instance Show Mask where
+  show = buildBoardString . boardStringTiles "#"
 
 -- | Create a mask which has only a single index set.
 --
@@ -151,3 +172,37 @@ hop S  = (`shiftR` 8) . moveable S
 hop SW = hop S . hop W
 hop W  = (`shiftR` 1) . moveable W
 hop NW = hop N . hop W
+
+-- * Printing Masks
+
+-- | A BoardStringTile is a board index followed by the string we'll use to represent
+-- what is occupying that index.
+type BoardStringTile = (Int, String)
+
+-- | Builds a partial list of BoardStringTiles from the occupied squares on a board.
+boardStringTiles :: String -> Mask -> [BoardStringTile]
+boardStringTiles s = map (flip (,) s) . toList
+
+-- | Adds blank BoardStringTiles to a list of BoardStringTiles. The length of the resulting list is
+-- always exactly 64 BoardStringTiles.
+fill :: [BoardStringTile] -> [BoardStringTile]
+fill ts = sort $ take 64 $ ts ++ map (\i -> (i, "_")) unused
+  where used   = map fst ts
+        unused = filter (`notElem` used) [0..63]
+
+-- | Builds a board from a list of the BoardStringTiles.
+buildBoardString :: [BoardStringTile] -> String
+buildBoardString ts = unlines (rows ++ columnLegend)
+  where columnLegend = ["  a b c d e f g h"]
+        ranks = (map concat . chunks 8 . map snd . fill) ts
+        rows  = "\n" : zipWith buildRank [(8 :: Int),7..] ranks
+        buildRank r ts' = show r ++ "|" ++ intersperse '|' ts' ++ "|"
+
+-- | When the integer argument is @n@, it splits a list into pieces of length
+-- @n@. The last piece will be shorter if @n@ does not evenly divide the
+-- length of the list. When @n == 0@, it creates an infinite list of empty
+-- lists.
+chunks :: Int -> [a] -> [[a]]
+chunks n xs = chunks' n xs []
+  where chunks' _ [] acc = acc
+        chunks' i ys acc = chunks' i (drop i ys) (take i ys:acc)

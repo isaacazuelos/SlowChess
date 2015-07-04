@@ -37,11 +37,14 @@ import qualified Game.SlowChess.Mask as M
 
 -- | Just like a 'Mask' that contains at most one piece marked. Coords can
 -- also be /off board/ in certain circumstances --- say after a 'hop'.
-newtype Coord = Coord M.Mask deriving ( Show, Eq )
+newtype Coord = Coord M.Mask deriving ( Eq )
+
+instance Show Coord where
+    show = show . name
 
 -- | The coordinates are ordered, as given by the diagrams in 'Mask'.
 instance Enum Coord where
-    toEnum   n = Coord (M.Mask (2^n))
+    toEnum n = Coord (M.Mask (2^n))
     fromEnum (Coord m) = if null lst then fromEnum OffBoard else head lst
       where lst = M.toList m
 
@@ -89,10 +92,10 @@ split :: M.Mask -> [Coord]
 split m = map (toEnum . fromEnum) (M.toList m)
 
 -- | Are the tiles of the 'Coord' marked on the 'Mask'?
--- Returns 'False' if the Coord is None since that already means the piece
+-- Returns 'False' if the Coord is OffBoard since that already means the piece
 -- is off the board.
 on :: Coord -> M.Mask -> Bool
-on (Coord c) m = M.both c m == m
+on (Coord c) m = c `M.submask` m && c /= 0
 
 -- |  Hop moves the piece in the specified direction.
 --
