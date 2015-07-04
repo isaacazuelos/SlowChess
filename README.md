@@ -8,6 +8,10 @@ It's still early in development.
 To Do List
 ----------
 
+### To fix
+
+* Finish tests for `Game.SlowChess.Move` and the special move modules.
+
 ### To Implement
 
 * ~~Basic Chess Terms~~
