@@ -13,14 +13,14 @@ module Game.SlowChess.Move.Promotion ( PromoteTo ( ToQueen
                                                  , ToKnight
                                                  )
                                      , mustPromote
+                                     , promotions
                                      , promote
                                      ) where
-
-import           Data.Monoid ((<>))
 
 import           Game.SlowChess.Mask hiding (fromList)
 import           Game.SlowChess.Board
 import           Game.SlowChess.Coord
+import           Game.SlowChess.Move.Internal
 import           Game.SlowChess.Piece
 
 -- | Restricts a promotion to the legal pieces -- namely queen, rook, bishop,
@@ -40,23 +40,24 @@ toPiece ToKnight = Knight
 
 -- | Does a player have pawns the need to promote?
 mustPromote :: Colour -> Board -> Bool
-mustPromote c b = 0 /= backPawns c b
+mustPromote c b = 0 /= get c Pawn b `both` furthestRank c
 
 -- | The ranks which are the furthest from the starting rank for a colour.
--- Pawns on the their 'furthestRank' /must/ be promoted.
+-- Pawns on the their furthest rank /must/ be promoted.
 furthestRank :: Colour -> Mask
 furthestRank White = fromList [A8, B8, C8, D8, E8, F8, G8, H8]
 furthestRank Black = fromList [A1, B1, C1, D1, E1, F1, G1, H1]
 
--- | All the pawns of a colour on a board on that colour's furthest rank.
-backPawns :: Colour -> Board -> Mask
-backPawns c b = get c Pawn b `both` furthestRank c
+-- | Promotes a the ply of a pawn moving to the back rank to a promotion of
+-- the specified 'PromoteTo' piece.
+promote :: Ply -> PromoteTo -> Ply
+promote m@(Move c Pawn s t) pt = if t `on` furthestRank c
+                                 then Promotion c (toPiece pt) s t
+                                 else m
+promote p _ = p
 
--- | Promotes all the pawns of a colour on the furthest rank to the
--- specified 'PromoteTo' piece.
-promote :: Colour -> Board -> PromoteTo -> Board
--- Since there should only ever be one pawn on the back rank (since they
--- /must/ be promoted), this isn't that bad.
-promote c b pt = set c p b promoted
-  where p = toPiece pt
-        promoted = backPawns c b <> get c p b
+-- | Run through a list of plys and promote the ones that can be promoted.
+promotions :: [Ply] -> [Ply]
+promotions ps = do pt <- [ToQueen, ToRook, ToKnight, ToBishop]
+                   m  <- ps
+                   return $ promote m pt

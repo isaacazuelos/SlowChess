@@ -9,6 +9,7 @@ import qualified CoordTests        as Coord (tests)
 import qualified FIDETests         as FIDE (tests)
 import qualified GameInternalTests as GameInternal (tests)
 import qualified MaskTests         as Mask (tests)
+import qualified MoveTests         as Move (tests)
 import qualified MoveInternalTests as MoveInternal (tests)
 import qualified PieceTests        as Piece (tests)
 
@@ -20,6 +21,7 @@ main = defaultMain $ testGroup "SlowChess tests" [ Piece.tests
                                                  , Board.tests
                                                  , GameInternal.tests
                                                  , MoveInternal.tests
+                                                 , Move.tests
                                                  , FIDE.tests
                                                  ]
 

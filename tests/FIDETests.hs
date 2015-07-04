@@ -140,14 +140,17 @@ testPromotion = testGroup "3.7.e - Pawn promotion"
 promotionBoard :: Board
 promotionBoard = set White Pawn blank (fromList [A8])
 
-promotedBoard :: Board
-promotedBoard = set White Queen blank (fromList [A8])
-
 testPromotionDetection = testCase "Pawn promition detection"
     (assert $ mustPromote White promotionBoard)
 
-testPromote = testCase "Pawn promotion" (result @?= promotedBoard)
-  where result = promote White promotionBoard ToQueen
+testPromote = testCase "Pawn promotion" (result @?= expected)
+  where result = promotions (movePawns White b)
+        b = set White Pawn blank (fromList [A7])
+        expected = [ Promotion White Queen  (coord A7) (coord A8)
+                   , Promotion White Rook   (coord A7) (coord A8)
+                   , Promotion White Knight (coord A7) (coord A8)
+                   , Promotion White Bishop (coord A7) (coord A8)
+                   ]
 
 testKingMoves = testGroup "Section 3.8 - Kings" [testKingSteps, testCastling]
 

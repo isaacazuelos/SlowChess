@@ -16,6 +16,7 @@ module Game.SlowChess.Board ( -- * Board Creation
                             , set
                             , update
                             , setMany
+                            , wipe
                               -- * Operations
                             , material
                             , blanks
@@ -140,7 +141,11 @@ conflicts (Board a b c d e f g h) = foldr xor 0 [a, b, c, d, e, f, g, h]
 -- | Set the positions of a type of piece on a board, ensuring that no other
 -- type of piece is at that position by overwriting them.
 set :: Colour -> Piece -> Board -> Mask -> Board
-set c p b m = modify c p (forEach b (`minus` m)) m
+set c p b m = modify c p (wipe b m) m
+
+-- | Wipe the pieces off some squares.
+wipe :: Board -> Mask -> Board
+wipe b m = forEach b (`minus` m)
 
 -- | Update the positions of a type of piece on a board using a function.
 -- This is equivalent to getting, applying the function then setting.

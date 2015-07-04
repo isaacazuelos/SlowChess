@@ -20,9 +20,11 @@
 -- This module only checks teh first two rules and assumes that the board
 -- started in the typical starting position.
 
-module Game.SlowChess.Move.Castle ( castle ) where
+module Game.SlowChess.Move.Castle ( castle, blindlyDoCastle ) where
 
 import           Control.Monad                (mzero)
+
+import           Data.Monoid                  ((<>))
 
 import           Game.SlowChess.Board
 import           Game.SlowChess.Coord
@@ -49,6 +51,13 @@ castle g = do s <- [Kingside, Queenside]
                 then return $ Castle (player g) s
                 else mzero
 
+-- | Do the actions to castle to a board, but /without/ any of the checks.
+-- This just blindly removes the pieces, and puts a king and rook where
+-- they ought to land.
+blindlyDoCastle :: Colour -> Board -> Side -> Board
+blindlyDoCastle c b s = update c King placedRook (<> mask (square s c King))
+  where placedRook = update c Rook removed (<> mask (square s c Rook))
+        removed = wipe b (mask (square s c Rook) <> mask (square s c King))
 
 -- | Is the board set up properly for a player to be able to castle?
 -- There's still the issue of weather or not the pieces have moved, so this

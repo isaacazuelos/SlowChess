@@ -15,39 +15,64 @@
 -- own modules. Tools for writing movements can be found in
 -- 'Game.SlowChess.Move.Internal'.
 
-module Game.SlowChess.Move where
+module Game.SlowChess.Move ( -- * Move generation
+                             moves
+                             -- * Helpful functions for working with moves
+                           , wrapSimple
+                           , apply
+                            -- * Piece-specific moves
+                           , moveKings
+                           , moveQueens
+                           , moveBishops
+                           , moveRooks
+                           , moveKnights
+                           , movePawns
+                           ) where
 
-import           Control.Monad (mzero)
+import           Control.Monad                 (mzero)
+import           Data.Monoid                   ((<>))
 
 import           Game.SlowChess.Board
 import           Game.SlowChess.Coord
-import           Game.SlowChess.Mask  (Mask)
-import           Game.SlowChess.Piece
-
 import           Game.SlowChess.Game.Internal
+import           Game.SlowChess.Mask           (Mask)
+import           Game.SlowChess.Move.Castle
+import           Game.SlowChess.Move.EnPassant
 import           Game.SlowChess.Move.Internal
+import           Game.SlowChess.Move.Promotion
+import           Game.SlowChess.Piece
 
 -- * All movements
 
--- | Return all legal plys to an existing game.
+-- | Return all plys which are responses to a game. This /does not/ filter
+-- out plys that would put the player in check.
 moves :: Game -> [Ply]
-moves = undefined
+moves g = [ castle
+          , enPassant
+          , wrapSimple moveQueens
+          , wrapSimple moveKnights
+          , wrapSimple moveRooks
+          , wrapSimple moveBishops
+          , wrapSimple moveKings
+          , promotions . wrapSimple movePawns
+          ] >>= ($ g)
 
--- * Special
+-- | Apply the 'Ply' to the 'Board' to get it's affect on the board.
+apply :: Ply -> Board -> Board
+apply (Castle c s) b = blindlyDoCastle c b s
+apply (Move      c p s t) b = update c p    (wipe b (mask s)) (<> mask t)
+apply (StepTwice c s t _) b = update c Pawn (wipe b (mask s)) (<> mask t)
+apply (Promotion c p s t) b = update c p    (wipe b (mask s)) (<> mask t)
+apply (EnPassant c s t e) b = update c Pawn boardWithRemovals (<> mask t)
+    where boardWithRemovals = wipe b (mask s <> mask e)
 
--- | Is the a game in check?
-inCheck :: Game -> Bool
-inCheck = undefined
 
--- | Is the game won?
-inCheckmate :: Game -> Bool
-inCheckmate = undefined
+-- | Wrap a simple movement up into the signature needed by even the most
+-- complicated of movement types.
+wrapSimple :: (Colour -> Board -> [Ply]) -> Game -> [Ply]
+wrapSimple simple g = simple (player g) (board g)
 
 -- * Simple Movements
-
--- | Wrap a simple movement to give it the signature of a special movement.
-wrapSimple :: (Colour -> Board -> [Ply]) -> Game -> [Ply]
-wrapSimple = undefined
 
 -- | Generates all the valid movements of the king of a colour on a
 -- board. Kings can move in any direction so long as they stay on the board
