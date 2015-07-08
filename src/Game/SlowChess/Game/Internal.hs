@@ -24,12 +24,15 @@
 module Game.SlowChess.Game.Internal where
 
 import           Game.SlowChess.Board
-import           Game.SlowChess.Piece
 import           Game.SlowChess.Move.Internal
+import           Game.SlowChess.Piece
 
 -- | A raw game state. Since this is still being sketched, this is
 -- likely to change a lot over the next few commits.
-data Game = Game { player  :: Colour
-                 , board   :: Board
-                 , history :: [(Board, Ply)]
-                 } deriving (Show, Eq)
+data Game = Game { player  :: Colour           -- ^ current player
+                 , board   :: Board            -- ^ current board
+                 , ply     :: Maybe Ply        -- ^ last ply played
+                 , past    :: Maybe Game       -- ^ previous game states
+                 , future  :: [Game]           -- ^ future legal states
+                 , options :: [(Colour, Side)] -- ^ available casltes
+                 } deriving ( Show, Eq )

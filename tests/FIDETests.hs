@@ -5,10 +5,9 @@ module FIDETests (tests) where
 import           Test.Tasty                    (testGroup)
 import           Test.Tasty.HUnit              (assert, testCase, (@?=))
 
-import           Data.Monoid                   ((<>))
-
 import           Game.SlowChess.Board
 import           Game.SlowChess.Coord
+import           Game.SlowChess.Game
 import           Game.SlowChess.Game.Internal
 import           Game.SlowChess.Mask           hiding (fromList)
 import           Game.SlowChess.Move
@@ -33,10 +32,6 @@ article3 = testGroup "Article 3" [ testBishopMove
                                  , testPawnMoves
                                  , testKingMoves
                                  ]
-
--- | Collects the targets of some 'Move's into a mask, just a helper.
-targets :: [Ply] -> Mask
-targets = foldl (\ a m -> a <> maybe 0 mask (destination m)) 0
 
 testBishopMove = testCase "3.2 - Bishops move diagonally" (result @?= expected)
   where result   = targets $ moveBishops Black b
@@ -122,17 +117,8 @@ testPawnAttack = testCase "3.7.c - Pawns attack diagonally forward"
   where result = targets (movePawns Black pawnTestBoard2)
 
 testEnPassant = testCase "3.7.d - En passant moves"
-                 (enPassant game @?= expected)
-  where expected = [EnPassant White (coord D5) (coord E6) (coord E5)]
-        oldBoard = setMany blank [ (Black, Pawn, [E7])
-                                 , (White, Pawn, [D5])
-                                 ]
-        lastMove = StepTwice Black (coord E7) (coord E5) (coord E6)
-        game     = Game { player = White
-                        , board = setMany blank [ (White, Pawn, [D5])
-                                                , (Black, Pawn, [E5])]
-                        , history = [(oldBoard, lastMove)]
-                        }
+                 (enPassant undefined @?= expected)
+  where expected = undefined
 
 testPromotion = testGroup "3.7.e - Pawn promotion"
                     [ testPromotionDetection, testPromote ]
@@ -168,24 +154,11 @@ testCastling = testGroup "3.8.b - Castling" [ testBlackKingside
                                             ]
 
 castleGame :: Colour -> Game
-castleGame c = Game { player = c
-                    , history = []
-                    , board = setMany blank [ (Black, King, [E8])
-                                            , (Black, Rook, [H8])
-                                            , (White, Rook, [A1])
-                                            , (White, King, [E1])
-                                            ]
-                    }
-
--- Notice that the castling moves relys on the fact (in the documentation)
--- that movement detection is done by making sure nothing's moved off of the
--- expected starting square. These aren't great tests, I know.
-
-castleGameWithMoves :: Game
-castleGameWithMoves = (castleGame White) { history = [ (blank, rookMove)
-                                                     , (blank, kingMove) ] }
-  where rookMove = Move White Rook (coord A1) (coord A2)
-        kingMove = Move White King (coord E2) (coord E1)
+castleGame c = challange c $ setMany blank [ (Black, King, [E8])
+                                           , (Black, Rook, [H8])
+                                           , (White, Rook, [A1])
+                                           , (White, King, [E1])
+                                           ]
 
 testBlackKingside = testCase "Black kingside castling" (result @?= expected)
   where result   = castle (castleGame Black)
@@ -196,10 +169,10 @@ testWhiteQueenside = testCase "White queenside castling" (result @?= expected)
         expected = [Castle White Queenside]
 
 testCastleKingMoved = testCase "You can't castle if the king has moved"
-                        (castle castleGameWithMoves @?= [])
+                        (castle undefined @?= [])
 
 testCastleRookMoved = testCase "You can't caslte if the rook has moved"
-                        (castle castleGameWithMoves @?= [])
+                        (castle undefined @?= [])
 
 -- TODO: Implement tests for 3.8.b.2
 -- TODO: Implement tests for 3.9

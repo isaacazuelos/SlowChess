@@ -22,13 +22,12 @@ import           Game.SlowChess.Piece
 -- | The /en passant/ plys which follow from a current game board.
 enPassant :: Game -> [Ply]
 -- This is kind of an abuse of pattern matching, I think.
-enPassant (Game { player  = c
-                , board   = b
-                , history = (_, StepTwice _ _ t skipped):_
-                }) = do source    <- each c Pawn b
-                        attackDir <- forwardAttack c
-                        attack    <- step c b attackDir source
-                        if attack == skipped
-                            then return $ EnPassant c source skipped t
-                            else mzero
-enPassant _ = []
+enPassant g = do let c = player g
+                 let b = board g
+                 let Just (StepTwice _ _ t skipped) = ply g
+                 source    <- each c Pawn b
+                 attackDir <- forwardAttack c
+                 attack    <- step c b attackDir source
+                 if attack == skipped
+                   then return $ EnPassant c source skipped t
+                   else mzero

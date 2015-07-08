@@ -193,7 +193,7 @@ fill ts = sort $ take 64 $ ts ++ map (\i -> (i, "_")) unused
 -- | Builds a board from a list of the BoardStringTiles.
 buildBoardString :: [BoardStringTile] -> String
 buildBoardString ts = unlines (rows ++ columnLegend)
-  where columnLegend = ["  a b c d e f g h"]
+  where columnLegend = ["  A B C D E F G H"]
         ranks = (map concat . chunks 8 . map snd . fill) ts
         rows  = "\n" : zipWith buildRank [(8 :: Int),7..] ranks
         buildRank r ts' = show r ++ "|" ++ intersperse '|' ts' ++ "|"

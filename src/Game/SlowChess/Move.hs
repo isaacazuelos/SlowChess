@@ -16,10 +16,12 @@
 -- 'Game.SlowChess.Move.Internal'.
 
 module Game.SlowChess.Move ( -- * Move generation
-                             moves
+                             Ply
+                           , moves
                              -- * Helpful functions for working with moves
+                           , targets
                            , wrapSimple
-                           , apply
+                           , doPly
                             -- * Piece-specific moves
                            , moveKings
                            , moveQueens
@@ -29,7 +31,6 @@ module Game.SlowChess.Move ( -- * Move generation
                            , movePawns
                            ) where
 
-import           Control.Monad                 (mzero)
 import           Data.Monoid                   ((<>))
 
 import           Game.SlowChess.Board
@@ -57,20 +58,26 @@ moves g = [ castle
           , promotions . wrapSimple movePawns
           ] >>= ($ g)
 
--- | Apply the 'Ply' to the 'Board' to get it's affect on the board.
-apply :: Ply -> Board -> Board
-apply (Castle c s) b = blindlyDoCastle c b s
-apply (Move      c p s t) b = update c p    (wipe b (mask s)) (<> mask t)
-apply (StepTwice c s t _) b = update c Pawn (wipe b (mask s)) (<> mask t)
-apply (Promotion c p s t) b = update c p    (wipe b (mask s)) (<> mask t)
-apply (EnPassant c s t e) b = update c Pawn boardWithRemovals (<> mask t)
-    where boardWithRemovals = wipe b (mask s <> mask e)
+-- * Helpers
 
+-- | Collects the targets of some 'Move's into a mask.
+targets :: [Ply] -> Mask
+targets = foldl (\ a m -> a <> maybe 0 mask (destination m)) 0
 
 -- | Wrap a simple movement up into the signature needed by even the most
 -- complicated of movement types.
 wrapSimple :: (Colour -> Board -> [Ply]) -> Game -> [Ply]
 wrapSimple simple g = simple (player g) (board g)
+
+-- | Apply the 'Ply' to the 'Board' to get it's affect on the board.
+doPly :: Ply -> Board -> Board
+doPly (Castle c s)        b = blindlyCastle c b s
+doPly (Move c p s t)      b = update c p    (wipe b (mask s)) (<> mask t)
+doPly (Cap c p s _ t)     b = update c p    (wipe b (mask s)) (<> mask t)
+doPly (StepTwice c s t _) b = update c Pawn (wipe b (mask s)) (<> mask t)
+doPly (Promotion c p s t) b = update c p    (wipe b (mask s)) (<> mask t)
+doPly (EnPassant c s t e) b = update c Pawn boardWithRemovals (<> mask t)
+  where boardWithRemovals = wipe b (mask s <> mask e)
 
 -- * Simple Movements
 
@@ -154,7 +161,7 @@ movePawns c b = captures ++ stepOnce ++ stepTwice
                            && (step1  `on` blanks b)
                            && (target `on` blanks b)
                          then return $ StepTwice c source target step1
-                         else mzero
+                         else []
 
 -- | The place where pawns start.
 homeRank :: Colour -> Mask
