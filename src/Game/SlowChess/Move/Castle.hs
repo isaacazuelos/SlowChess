@@ -20,12 +20,9 @@
 -- This module only checks teh first two rules and assumes that the board
 -- started in the typical starting position.
 
-module Game.SlowChess.Move.Castle ( castle
-                                  , blindlyCastle
-                                  , disallowCastling
-                                  , allOptions
-                                  ) where
+module Game.SlowChess.Move.Castle ( castle, allOptions ) where
 
+import           Data.List                    (delete)
 import           Data.Monoid                  ((<>))
 
 import           Game.SlowChess.Board
@@ -39,9 +36,19 @@ import           Game.SlowChess.Move.Internal
 -- | Returns the mostly-legal castling moves for a game. This even includes
 -- plys that would put the player in check. Since you /can't/ put youself into
 -- check, that's ensured elsewhere.
-castle :: Game -> [Ply]
-castle g = [Kingside, Queenside] >>=
-    (\ s -> if hasBlanks g s && hasOption g s then return $ Castle (player g) s else [])
+castle :: Rule
+castle g = do s <- [Kingside, Queenside]
+              let c = player g
+              let p = Castle c s
+              if hasBlanks g s && hasOption g s
+                  then return $ -- TODO: format better
+                    (next g p (blindlyCastle c (board g) s))
+                        { options = delete (c, s) (options g) }
+                  else []
+
+-- | All possible castling options
+allOptions :: [(Colour, Side)]
+allOptions = [(c, s) | c <- [White, Black], s <- [Queenside, Kingside]]
 
 -- | Do the actions to castle to a board, but /without/ any of the checks.
 -- This just blindly removes the pieces, and puts a king and rook where
@@ -50,11 +57,6 @@ blindlyCastle :: Colour -> Board -> Side -> Board
 blindlyCastle c b s = update c King placedRook (<> mask (square s c King))
   where placedRook = update c Rook removed (<> mask (square s c Rook))
         removed = wipe b (mask (square s c Rook) <> mask (square s c King))
-
--- Disallows all types of castling for a game. This is typcially used for
--- building chess problems or tests.
-disallowCastling :: Game -> Game
-disallowCastling = undefined
 
 -- * Helpers
 
@@ -70,10 +72,6 @@ hasBlanks g s = (square s c Rook `on` get c Rook b)
 
 hasOption :: Game -> Side -> Bool
 hasOption g s = (player g, s) `elem` options g
-
--- | All possible castling options
-allOptions :: [(Colour, Side)]
-allOptions = [(c, s) | c <- [White, Black], s <- [Queenside, Kingside]]
 
 -- | Are there the blanks between the king and rook required?
 between :: Side -> Colour -> Mask

@@ -33,6 +33,30 @@ data Game = Game { player  :: Colour           -- ^ current player
                  , board   :: Board            -- ^ current board
                  , ply     :: Maybe Ply        -- ^ last ply played
                  , past    :: Maybe Game       -- ^ previous game states
-                 , future  :: [Game]           -- ^ future legal states
+                 , _future :: Maybe [Game]
+                   -- Rule-specific requirements.
                  , options :: [(Colour, Side)] -- ^ available casltes
-                 } deriving ( Show, Eq )
+                 } deriving ( Eq )
+
+instance Show Game where
+  show g = "\nplayer: " ++ show (player g) ++
+           "\nply: "    ++ show (ply g)    ++
+           "\nboard:"   ++ show (board g)
+
+-- | A generic version of the next game, updating the player and past in the
+-- obvious way.
+next :: Game -> Ply -> Board -> Game
+next g p b = g { player = enemy (player g)
+               , board  = b
+               , ply    = Just p
+               , past   = Just g
+               }
+
+-- | Build out the future, recursivly. The 'Rule' passed in is used to
+-- generate all possible futures.
+buildFutureBy :: Rule -> Game -> Game
+buildFutureBy f g = g { _future = Just $ map (buildFutureBy f) (f g) }
+
+-- | A rule is something which either grows or restricts the possible futures
+-- of a 'Game'.
+type Rule = Game -> [Game]

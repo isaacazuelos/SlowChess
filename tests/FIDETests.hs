@@ -3,7 +3,9 @@
 module FIDETests (tests) where
 
 import           Test.Tasty                    (testGroup)
-import           Test.Tasty.HUnit              (assert, testCase, (@?=))
+import           Test.Tasty.HUnit              (assert, testCase, (@?=), (@?))
+
+import           Data.Maybe                    (mapMaybe)
 
 import           Game.SlowChess.Board
 import           Game.SlowChess.Coord
@@ -12,7 +14,6 @@ import           Game.SlowChess.Game.Internal
 import           Game.SlowChess.Mask           hiding (fromList)
 import           Game.SlowChess.Move
 import           Game.SlowChess.Move.Castle
-import           Game.SlowChess.Move.EnPassant
 import           Game.SlowChess.Move.Internal
 import           Game.SlowChess.Move.Promotion
 import           Game.SlowChess.Piece
@@ -44,7 +45,7 @@ testBishopMove = testCase "3.2 - Bishops move diagonally" (result @?= expected)
 testRookMove = testCase "3.3 - Rooks move along their current rank or file"
                 (result @?= expected)
   where result   = targets $ moveRooks Black b
-        b    = setMany blank [(Black, Rook, [D3])]
+        b        = setMany blank [(Black, Rook, [D3])]
         expected = fromList [ A3, B3, C3, E3, F3, G3, H3
                             , D1, D2, D4, D5, D6, D7, D8
                             ]
@@ -117,26 +118,18 @@ testPawnAttack = testCase "3.7.c - Pawns attack diagonally forward"
   where result = targets (movePawns Black pawnTestBoard2)
 
 testEnPassant = testCase "3.7.d - En passant moves"
-                 (enPassant undefined @?= expected)
-  where expected = undefined
+                 ((expected `elem` mapMaybe ply (lookAhead 2 game)) @?
+                    "En Passant move missing")
+  where expected = EnPassant White (coord D5) (coord E6) (coord E5)
+        game = challange Black $ setMany blank [ (Black, Pawn, [E7])
+                                               , (White, Pawn, [D5])
+                                               ]
 
-testPromotion = testGroup "3.7.e - Pawn promotion"
-                    [ testPromotionDetection, testPromote ]
-
-promotionBoard :: Board
-promotionBoard = set White Pawn blank (fromList [A8])
-
-testPromotionDetection = testCase "Pawn promition detection"
-    (assert $ mustPromote White promotionBoard)
-
-testPromote = testCase "Pawn promotion" (result @?= expected)
-  where result = promotions (movePawns White b)
-        b = set White Pawn blank (fromList [A7])
-        expected = [ Promotion White Queen  (coord A7) (coord A8)
-                   , Promotion White Rook   (coord A7) (coord A8)
-                   , Promotion White Knight (coord A7) (coord A8)
-                   , Promotion White Bishop (coord A7) (coord A8)
-                   ]
+testPromotion = testCase "3.7.e - Pawn promotion"
+    (expected `elem` result @? "no promotion in:\n\t" ++ show result)
+  where expected = Promotion White Queen (coord A7) (coord A8)
+        newBoard = challange White (set White Pawn blank (fromList [A7]))
+        result = mapMaybe ply $ future newBoard >>= promotions
 
 testKingMoves = testGroup "Section 3.8 - Kings" [testKingSteps, testCastling]
 
@@ -149,30 +142,21 @@ testKingSteps = testCase "3.8.a - Kings step 1 square" (result @?= expected)
 
 testCastling = testGroup "3.8.b - Castling" [ testBlackKingside
                                             , testWhiteQueenside
-                                            , testCastleKingMoved
-                                            , testCastleRookMoved
                                             ]
 
 castleGame :: Colour -> Game
-castleGame c = challange c $ setMany blank [ (Black, King, [E8])
-                                           , (Black, Rook, [H8])
-                                           , (White, Rook, [A1])
-                                           , (White, King, [E1])
-                                           ]
+castleGame c = (challange c b) { options = allOptions }
+  where b = setMany blank [ (Black, King, [E8]), (Black, Rook, [H8])
+                          , (White, Rook, [A1]), (White, King, [E1])
+                          ]
 
 testBlackKingside = testCase "Black kingside castling" (result @?= expected)
-  where result   = castle (castleGame Black)
+  where result   = mapMaybe ply $ castle (castleGame Black)
         expected = [Castle Black Kingside]
 
 testWhiteQueenside = testCase "White queenside castling" (result @?= expected)
-  where result   = castle (castleGame White)
+  where result   = mapMaybe ply $ castle (castleGame White)
         expected = [Castle White Queenside]
-
-testCastleKingMoved = testCase "You can't castle if the king has moved"
-                        (castle undefined @?= [])
-
-testCastleRookMoved = testCase "You can't caslte if the rook has moved"
-                        (castle undefined @?= [])
 
 -- TODO: Implement tests for 3.8.b.2
 -- TODO: Implement tests for 3.9

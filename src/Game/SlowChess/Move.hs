@@ -20,9 +20,7 @@ module Game.SlowChess.Move ( -- * Move generation
                            , moves
                              -- * Helpful functions for working with moves
                            , targets
-                           , wrapSimple
-                           , doPly
-                            -- * Piece-specific moves
+                             -- * Piece-specific moves
                            , moveKings
                            , moveQueens
                            , moveBishops
@@ -37,26 +35,21 @@ import           Game.SlowChess.Board
 import           Game.SlowChess.Coord
 import           Game.SlowChess.Game.Internal
 import           Game.SlowChess.Mask           (Mask)
-import           Game.SlowChess.Move.Castle
-import           Game.SlowChess.Move.EnPassant
 import           Game.SlowChess.Move.Internal
-import           Game.SlowChess.Move.Promotion
 import           Game.SlowChess.Piece
 
 -- * All movements
 
--- | Return all plys which are responses to a game. This /does not/ filter
--- out plys that would put the player in check.
-moves :: Game -> [Ply]
-moves g = [ castle
-          , enPassant
-          , wrapSimple moveQueens
-          , wrapSimple moveKnights
-          , wrapSimple moveRooks
-          , wrapSimple moveBishops
-          , wrapSimple moveKings
-          , promotions . wrapSimple movePawns
-          ] >>= ($ g)
+-- | Uses the basic movment rules to generate all a bunch of movement
+-- possibilites.
+moves :: Game -> [Game]
+moves g = concat [ wrapSimple g movePawns
+                 , wrapSimple g moveKings
+                 , wrapSimple g moveQueens
+                 , wrapSimple g moveKnights
+                 , wrapSimple g moveBishops
+                 , wrapSimple g moveRooks
+                 ]
 
 -- * Helpers
 
@@ -66,18 +59,28 @@ targets = foldl (\ a m -> a <> maybe 0 mask (destination m)) 0
 
 -- | Wrap a simple movement up into the signature needed by even the most
 -- complicated of movement types.
-wrapSimple :: (Colour -> Board -> [Ply]) -> Game -> [Ply]
-wrapSimple simple g = simple (player g) (board g)
+wrapSimple :: Game -> (Colour -> Board -> [Ply]) -> [Game]
+wrapSimple g simple = map (apply g) $ simple (player g) (board g)
 
--- | Apply the 'Ply' to the 'Board' to get it's affect on the board.
-doPly :: Ply -> Board -> Board
-doPly (Castle c s)        b = blindlyCastle c b s
-doPly (Move c p s t)      b = update c p    (wipe b (mask s)) (<> mask t)
-doPly (Cap c p s _ t)     b = update c p    (wipe b (mask s)) (<> mask t)
-doPly (StepTwice c s t _) b = update c Pawn (wipe b (mask s)) (<> mask t)
-doPly (Promotion c p s t) b = update c p    (wipe b (mask s)) (<> mask t)
-doPly (EnPassant c s t e) b = update c Pawn boardWithRemovals (<> mask t)
-  where boardWithRemovals = wipe b (mask s <> mask e)
+-- | Appply a 'Ply' to a 'Game' to get the game it makes.
+-- This is /really/ stupid, and doesn't check any other rules.
+apply :: Game -> Ply -> Game
+-- We only cover the constructors we need, i.e. the ones used in this module.
+apply g m@(Move c p s t) = g'
+  where g' = g { player  = enemy (player g)
+               , board   = update c p (wipe (board g) (mask s)) (<> mask t)
+               , ply     = Just m
+               , past    = Just g
+               , _future = Nothing
+               }
+apply g m@(StepTwice c s t _) = g'
+  where g' = g { player  = enemy (player g)
+             , board   = update c Pawn (wipe (board g) (mask s)) (<> mask t)
+             , ply     = Just m
+             , past    = Just g
+             , _future = Nothing
+             }
+apply _ _ = undefined -- See the above message
 
 -- * Simple Movements
 
