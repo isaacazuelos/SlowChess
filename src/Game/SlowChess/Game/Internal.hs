@@ -29,27 +29,32 @@ import           Game.SlowChess.Piece
 
 -- | A raw game state. Since this is still being sketched, this is
 -- likely to change a lot over the next few commits.
-data Game = Game { player  :: Colour           -- ^ current player
-                 , board   :: Board            -- ^ current board
-                 , ply     :: Maybe Ply        -- ^ last ply played
-                 , past    :: Maybe Game       -- ^ previous game states
-                 , _future :: Maybe [Game]
+data Game = Game { player     :: Colour           -- ^ current player
+                 , board      :: Board            -- ^ current board
+                 , ply        :: Maybe Ply        -- ^ last ply played
+                 , past       :: Maybe Game       -- ^ previous game states
+                 , _future    :: Maybe [Game]
                    -- Rule-specific requirements.
-                 , options :: [(Colour, Side)] -- ^ available casltes
+                 , options    :: [(Colour, Side)] -- ^ available casltes
+                 , drawStatus :: DrawStatus       -- ^ three fold rule
+                 , fifty      :: Int              -- ^ fifty move rule
                  } deriving ( Eq )
 
 instance Show Game where
-  show g = "\nplayer: " ++ show (player g) ++
-           "\nply: "    ++ show (ply g)    ++
+  show g = "\nplayer: " ++ show (player g)     ++
+           "\nply: "    ++ show (ply g)        ++
+           "\nfifty: "  ++ show (fifty g)      ++
+           "\ndraw: "   ++ show (drawStatus g) ++
            "\nboard:"   ++ show (board g)
 
 -- | A generic version of the next game, updating the player and past in the
 -- obvious way.
 next :: Game -> Ply -> Board -> Game
-next g p b = g { player = enemy (player g)
-               , board  = b
-               , ply    = Just p
-               , past   = Just g
+next g p b = g { player     = enemy (player g)
+               , board      = b
+               , ply        = Just p
+               , past       = Just g
+               , drawStatus = Normal
                }
 
 -- | Build out the future, recursivly. The 'Rule' passed in is used to
@@ -57,6 +62,14 @@ next g p b = g { player = enemy (player g)
 buildFutureBy :: Rule -> Game -> Game
 buildFutureBy f g = g { _future = Just $ map (buildFutureBy f) (f g) }
 
+-- | The history of a game, back to the first 'Game'.
+history :: Game -> [Game]
+history g = case past g of
+              Just g' -> g' : history g'
+              Nothing -> []
+
 -- | A rule is something which either grows or restricts the possible futures
 -- of a 'Game'.
 type Rule = Game -> [Game]
+
+data DrawStatus = Claimable | Normal | Offered deriving ( Show, Eq )
