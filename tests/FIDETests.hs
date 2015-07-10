@@ -10,12 +10,9 @@ import           Data.Maybe                    (mapMaybe)
 import           Game.SlowChess.Board
 import           Game.SlowChess.Coord
 import           Game.SlowChess.Game
-import           Game.SlowChess.Game.Internal
 import           Game.SlowChess.Mask           hiding (fromList)
 import           Game.SlowChess.Move
-import           Game.SlowChess.Move.Castle
 import           Game.SlowChess.Move.Internal
-import           Game.SlowChess.Move.Promotion
 import           Game.SlowChess.Piece
 
 -- These tests are the examples given in the FIDE Laws of Chess, specifically
@@ -40,7 +37,6 @@ testBishopMove = testCase "3.2 - Bishops move diagonally" (result @?= expected)
         expected = fromList [ B1, C2, D3, F5, G6, H7, A8
                             , B7, C6, D5, F3, G2, H1
                             ]
-
 
 testRookMove = testCase "3.3 - Rooks move along their current rank or file"
                 (result @?= expected)
@@ -145,7 +141,7 @@ testCastling = testGroup "3.8.b - Castling" [ testBlackKingside
                                             ]
 
 castleGame :: Colour -> Game
-castleGame c = (challange c b) { options = allOptions }
+castleGame c = enableCastling (challange c b)
   where b = setMany blank [ (Black, King, [E8]), (Black, Rook, [H8])
                           , (White, Rook, [A1]), (White, King, [E1])
                           ]

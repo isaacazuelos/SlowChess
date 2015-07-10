@@ -43,7 +43,7 @@ castle g = do s <- [Kingside, Queenside]
               if hasBlanks g s && hasOption g s
                   then return $ -- TODO: format better
                     (next g p (blindlyCastle c (board g) s))
-                        { options = delete (c, s) (options g) }
+                        { castleStatus = delete (c, s) (castleStatus g) }
                   else []
 
 -- | All possible castling options
@@ -71,7 +71,7 @@ hasBlanks g s = (square s c Rook `on` get c Rook b)
         c = player g
 
 hasOption :: Game -> Side -> Bool
-hasOption g s = (player g, s) `elem` options g
+hasOption g s = (player g, s) `elem` castleStatus g
 
 -- | Are there the blanks between the king and rook required?
 between :: Side -> Colour -> Mask

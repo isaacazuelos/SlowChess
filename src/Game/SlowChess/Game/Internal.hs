@@ -29,22 +29,22 @@ import           Game.SlowChess.Piece
 
 -- | A raw game state. Since this is still being sketched, this is
 -- likely to change a lot over the next few commits.
-data Game = Game { player     :: Colour           -- ^ current player
-                 , board      :: Board            -- ^ current board
-                 , ply        :: Maybe Ply        -- ^ last ply played
-                 , past       :: Maybe Game       -- ^ previous game states
-                 , _future    :: Maybe [Game]
+data Game = Game { player       :: Colour           -- ^ current player
+                 , board        :: Board            -- ^ current board
+                 , ply          :: Maybe Ply        -- ^ last ply played
+                 , past         :: Maybe Game       -- ^ previous game states
+                 , _future      :: Maybe [Game]
                    -- Rule-specific requirements.
-                 , options    :: [(Colour, Side)] -- ^ available casltes
-                 , drawStatus :: DrawStatus       -- ^ three fold rule
-                 , fifty      :: Int              -- ^ fifty move rule
+                 , castleStatus :: [(Colour, Side)] -- ^ available casltes
+                 , drawStatus   :: DrawStatus       -- ^ three fold rule
+                 , fiftyStatus  :: Int              -- ^ fifty move rule
                  } deriving ( Eq )
 
 instance Show Game where
-  show g = "\nplayer: " ++ show (player g)     ++
-           "\nply: "    ++ show (ply g)        ++
-           "\nfifty: "  ++ show (fifty g)      ++
-           "\ndraw: "   ++ show (drawStatus g) ++
+  show g = "\nplayer: " ++ show (player g)      ++
+           "\nply: "    ++ show (ply g)         ++
+           "\nfifty: "  ++ show (fiftyStatus g) ++
+           "\ndraw: "   ++ show (drawStatus g)  ++
            "\nboard:"   ++ show (board g)
 
 -- | A generic version of the next game, updating the player and past in the

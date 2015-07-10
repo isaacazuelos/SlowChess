@@ -6,14 +6,14 @@
 --
 --
 
-module Game.SlowChess.Game.Fifty (fiftyMove) where
+module Game.SlowChess.Game.Fifty (fifty) where
 
 import Game.SlowChess.Move.Internal
 import Game.SlowChess.Game.Internal
 import Game.SlowChess.Piece
 
-fiftyMove :: Rule
-fiftyMove g = return g { fifty = updateFifty g }
+fifty :: Rule
+fifty g = return g { fiftyStatus = updateFifty g }
 
 -- | Increment if the last ply is not a pawn moving or a capture, otherwise
 -- it's reset to 0.
@@ -21,4 +21,4 @@ updateFifty :: Game -> Int
 updateFifty g = case ply g of
                     Nothing                -> 0
                     Just (Move _ Pawn _ _) -> 0
-                    _                      -> 1 + fifty g
+                    _                      -> 1 + fiftyStatus g

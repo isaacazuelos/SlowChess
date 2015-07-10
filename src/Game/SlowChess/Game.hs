@@ -12,8 +12,19 @@ module Game.SlowChess.Game ( -- * Constructors
                              Game
                            , start
                            , challange
+                           , enableCastling
+                             -- * Gernerating Rules
+                           , moves
+                           , castle
+                           , enPassant
+                           , promotions
+                             -- * Restrictive Rules
+                           , fifty
+                           , threeFold
+                           , checkRule
                              -- * Accessors
                            , future
+                           , ply
                            , lookAhead
                              -- * Game state predicates
                            , check
@@ -49,9 +60,9 @@ start = buildFutureBy legal g
                  , ply          = Nothing
                  , past         = Nothing
                  , _future      = Nothing
-                 , options      = allOptions
+                 , castleStatus = allOptions
                  , drawStatus   = Normal
-                 , fifty        = 0
+                 , fiftyStatus  = 0
                  }
 
 -- | Builds a game out of a challange board. This assumes that castling isn't
@@ -64,18 +75,23 @@ challange c b = buildFutureBy legal g
                  , ply          = Nothing
                  , past         = Nothing
                  , _future      = Nothing
-                 , options      = mempty
+                 , castleStatus = mempty
                  , drawStatus   = Normal
-                 , fifty        = 0
+                 , fiftyStatus  = 0
                  }
+
+-- | Re-enable all castling options for a 'Game', typically for setting up
+-- a 'challange' game.
+enableCastling :: Game -> Game
+enableCastling g = g { castleStatus = allOptions }
 
 -- * Game-using rules.
 
 -- Generate /all/ legal moves.
 legal :: Rule
-legal g = (moves g <> castle g <> castle g <> enPassant g)
+legal g = (moves g <> castle g <> enPassant g)
             >>= promotions
-            >>= fiftyMove
+            >>= fifty
             >>= threeFold
             >>= checkRule
 
