@@ -27,6 +27,8 @@ module Game.SlowChess.Move ( -- * Move generation
                            , moveRooks
                            , moveKnights
                            , movePawns
+                             -- * Helpers
+                           , kingTargets
                            ) where
 
 import           Data.Monoid                   ((<>))
@@ -92,6 +94,11 @@ moveKings c b = do direction <- allDirections
                    source    <- each c King b
                    target    <- step c b direction source
                    return $ Move c King source target
+
+-- | All the places a king can move to on the board. Useful for determining
+-- if a board is in checkmate.
+kingTargets :: Colour -> Board -> Mask
+kingTargets c b = targets (moveKings c b)
 
 -- | Generates all the valid movements of the knights of a colour on a board.
 -- Knights are capable of moving to their target squares regardless of other

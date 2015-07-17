@@ -20,7 +20,29 @@ import           Game.SlowChess.Piece
 -- enought with Chess politics to know what the differences are.
 -- <https://www.fide.com/component/handbook/?id=171&view=article>
 
-tests = testGroup "FIDE tests" [ article3 ]
+tests = testGroup "FIDE tests" [ article1, article3 ]
+
+article1 = testGroup "Article 1" [ testCheckmate ]
+
+testCheckmate = testGroup "1.2 - Checkmate Rules"
+    [ testInCheckmate, testNotInCheckmate ]
+
+checkmateGame1 :: Game
+checkmateGame1 = challange White $ setMany blank [ (White, King, [F5])
+                                                 , (Black, King, [H5])
+                                                 , (White, Rook, [H1])
+                                                 ]
+
+checkmateGame2 :: Game
+checkmateGame2 = challange White $ setMany blank [ (Black, King, [H5]) ]
+
+testInCheckmate = testCase "Checkmate in affermative" $
+    checkmate checkmateGame1 @?
+        show (board checkmateGame1) ++ "\nAppearently is not in checkmate."
+
+testNotInCheckmate = testCase "Checkmate in negative" $
+    not (checkmate checkmateGame2) @?
+        show (board checkmateGame2) ++ "\nAppearently is in checkmate."
 
 article3 = testGroup "Article 3" [ testBishopMove
                                  , testRookMove
@@ -29,6 +51,7 @@ article3 = testGroup "Article 3" [ testBishopMove
                                  , testKnightMoves
                                  , testPawnMoves
                                  , testKingMoves
+                                 , testCheck
                                  ]
 
 testBishopMove = testCase "3.2 - Bishops move diagonally" (result @?= expected)
@@ -138,6 +161,8 @@ testKingSteps = testCase "3.8.a - Kings step 1 square" (result @?= expected)
 
 testCastling = testGroup "3.8.b - Castling" [ testBlackKingside
                                             , testWhiteQueenside
+                                            , testCastleAttack
+                                            , testCastleJump
                                             ]
 
 castleGame :: Colour -> Game
@@ -154,5 +179,41 @@ testWhiteQueenside = testCase "White queenside castling" (result @?= expected)
   where result   = mapMaybe ply $ castle (castleGame White)
         expected = [Castle White Queenside]
 
--- TODO: Implement tests for 3.8.b.2
--- TODO: Implement tests for 3.9
+castleGame2 :: Game
+castleGame2 = enableCastling (challange White b)
+  where b = setMany blank [ (White, Rook,  [A1]), (White, King, [E1])
+                          , (Black, Queen, [B2])
+                          ]
+
+testCastleAttack = testCase "3.8.b.2.a"
+    (Castle White Queenside `notElem` plys @? "No castle in:\n" ++ show plys)
+  where plys = mapMaybe ply (future castleGame2)
+
+castleGame3 :: Game
+castleGame3 = enableCastling $ challange White b
+  where b = setMany blank [ (White, Rook,   [A1]), (White, King, [E1])
+                          , (White, Knight, [B1])
+                          ]
+
+testCastleJump = testCase "3.8.b.2.b"
+    (castle castleGame3 @?= [])
+
+testCheck = testGroup "3.9 - Check rules" [ testInCheck, testNotInCheck ]
+
+checkGame1 :: Game
+checkGame1 = challange Black $ setMany blank [ (White, King,  [A1])
+                                             , (Black, Queen, [A8])
+                                             , (Black, King,  [D4])
+                                             ]
+
+checkGame2 :: Game
+checkGame2 = challange Black $ setMany blank [ (White, King, [A1])
+                                             , (Black, King, [H8])
+                                             ]
+
+testInCheck = testCase "3.9 - Check in the affermative" $ check checkGame1
+    @? show (board checkGame1) ++ "\nAppearently isn't in check."
+
+testNotInCheck = testCase "3.9 - Check in the negative" $
+    not (check checkGame2) @?
+        show (board checkGame2) ++ "\nAppearently is in check."

@@ -21,9 +21,9 @@ module Game.SlowChess.Game ( -- * Constructors
                              -- * Restrictive Rules
                            , fifty
                            , threeFold
-                           , checkRule
                              -- * Accessors
                            , future
+                           , board
                            , ply
                            , lookAhead
                              -- * Game state predicates
@@ -87,16 +87,17 @@ enableCastling g = g { castleStatus = allOptions }
 
 -- * Game-using rules.
 
--- Generate /all/ legal moves.
+-- | Generate the moves which are legal, were it not for the rule about not
+-- moving into check.
 legal :: Rule
 legal g = (moves g <> castle g <> enPassant g)
             >>= promotions
             >>= fifty
             >>= threeFold
-            >>= checkRule
 
+-- | All legal futures of a game.
 future :: Game -> [Game]
-future g = fromMaybe (legal g) (_future g)
+future g = fromMaybe (filter (not . check) (legal g)) (_future g)
 
 -- | Get a bunch of future games a certain deapth ahead.
 lookAhead :: Int -> Game -> [Game]
@@ -105,33 +106,23 @@ lookAhead n
     | n == 1    = future
     | otherwise = (>>= future) . lookAhead (n-1)
 
--- | Is the a game in check? A game is in check if the next player can move a
--- piece in a way that captures the king.
+-- | Is the a game in check? A game is in check if the current player's king
+-- could be captured if they do nothing.
 check :: Game -> Bool
-check g = any (cappedKing (player g)) (future g)
+check g = kingIs (/= 0) (togglePlayer g) && any (kingIs (== 0)) (future g)
+  where kingIs f g' = f $ get (player g') King (board g')
 
--- | You can't move into check.
-checkRule :: Rule
-checkRule g = if check g then [] else return g
-
--- | Is the game won? A game is in checkmate if the current player cannot
--- make a move which does not yeild check.
+-- | Is the game won? A game is in checkmate if the current player's king will
+-- remain in check regardless of how they play.
 checkmate :: Game -> Bool
-checkmate g = all (cappedKing (player g)) (future g)
+checkmate g = check g && hasKing && kings `submask` attacked (future g)
+  where kings = kingTargets (player g) (board g)
+        hasKing = 0 /= get (player g) King (board g)
 
 -- | Has a game drawn? Games can draw due to a multitude of reasons.
 -- see https://en.wikipedia.org/wiki/Draw_(chess)#Draws_in_all_games
 draw :: Game -> Bool
 draw g = drawStatus g /= Normal
-
--- | Is there a king left for the player of a game. Since games can be
--- challange boards, it checks that there /was/ a king before that was just
--- captured.
-cappedKing :: Colour -> Game -> Bool
-cappedKing c g = case past g of
-                    Nothing -> False
-                    Just g' -> get c King (board g') /= mempty
-                            && get c King (board g)  == mempty
 
 -- * Working with games.
 

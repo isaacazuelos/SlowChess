@@ -41,11 +41,15 @@ data Game = Game { player       :: Colour           -- ^ current player
                  } deriving ( Eq )
 
 instance Show Game where
-  show g = "\nplayer: " ++ show (player g)      ++
-           "\nply: "    ++ show (ply g)         ++
-           "\nfifty: "  ++ show (fiftyStatus g) ++
-           "\ndraw: "   ++ show (drawStatus g)  ++
-           "\nboard:"   ++ show (board g)
+  show g = "\nplayer: "  ++ show (player g)      ++
+           "\nply: "     ++ show (ply g)         ++
+           "\nfifty: "   ++ show (fiftyStatus g) ++
+           "\ndraw: "    ++ show (drawStatus g)  ++
+           "\nboard:"    ++ show (board g)       ++
+           "\nfutures: " ++ case _future g of
+                                Nothing -> "not set"
+                                Just fs -> show $ length fs
+
 
 -- | A generic version of the next game, updating the player and past in the
 -- obvious way.
@@ -67,6 +71,10 @@ history :: Game -> [Game]
 history g = case past g of
               Just g' -> g' : history g'
               Nothing -> []
+
+-- | Toggles the current player of a game.
+togglePlayer :: Game -> Game
+togglePlayer g = g { player = enemy $ player g }
 
 -- | A rule is something which either grows or restricts the possible futures
 -- of a 'Game'.

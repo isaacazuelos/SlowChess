@@ -5,17 +5,17 @@
 -- Maintainer  : Isaac Azuelos
 --
 -- When the king and the a rook have not moved, they can castle --- moving the
--- king two squares towards a rook on the player's first rank, then moving the
--- rook to the square over which the king crossed.
+-- king two squareBefores towards a rook on the player's first rank, then moving the
+-- rook to the squareBefore over which the king crossed.
 --
 -- Castling may only be done if:
 --
 -- 1. The king has never moved, the rook involved has never moved.
 --
--- 2. The squares between the king and the rook involved are unoccupied
+-- 2. The squareBefores between the king and the rook involved are unoccupied
 --
 -- 3. The king is not in check, and the king does not cross over or end on a
---    square in which it would be in check.
+--    squareBefore in which it would be in check.
 --
 -- This module only checks teh first two rules and assumes that the board
 -- started in the typical starting position.
@@ -40,8 +40,8 @@ castle :: Rule
 castle g = do s <- [Kingside, Queenside]
               let c = player g
               let p = Castle c s
-              if hasBlanks g s && hasOption g s
-                  then return $ -- TODO: format better
+              if canCastle g s
+                  then return
                     (next g p (blindlyCastle c (board g) s))
                         { castleStatus = delete (c, s) (castleStatus g) }
                   else []
@@ -54,22 +54,27 @@ allOptions = [(c, s) | c <- [White, Black], s <- [Queenside, Kingside]]
 -- This just blindly removes the pieces, and puts a king and rook where
 -- they ought to land.
 blindlyCastle :: Colour -> Board -> Side -> Board
-blindlyCastle c b s = update c King placedRook (<> mask (square s c King))
-  where placedRook = update c Rook removed (<> mask (square s c Rook))
-        removed = wipe b (mask (square s c Rook) <> mask (square s c King))
+blindlyCastle c b s = update c King placedRook (<> squareAfter s c King)
+  where placedRook = update c Rook removed (<> squareAfter s c Rook)
+        removed = wipe b (squareBefore s c Rook <> squareBefore s c King)
 
 -- * Helpers
 
 -- | Is the board set up properly for a player to be able to castle?
--- There's still the issue of weather or not the pieces have moved, so this
--- isn't all of the relevant rules.
-hasBlanks :: Game -> Side -> Bool
-hasBlanks g s = (square s c Rook `on` get c Rook b)
-                    && (square s c King `on` get c King b)
-                    && (between s c `submask` blanks b)
+canCastle :: Game -> Side -> Bool
+canCastle g s = hasBlanks g s && hasOption g s && piecesAreRight g s
+
+piecesAreRight :: Game -> Side -> Bool
+piecesAreRight g s = (squareBefore s c Rook `submask` get c Rook b)
+                        && (squareBefore s c King `submask` get c King b)
   where b = board g
         c = player g
 
+-- | Are there blansk where there needs to be?
+hasBlanks :: Game -> Side -> Bool
+hasBlanks g s = between s (player g) `submask` blanks (board g)
+
+-- | Does the game still have the option to castle?
 hasOption :: Game -> Side -> Bool
 hasOption g s = (player g, s) `elem` castleStatus g
 
@@ -80,12 +85,24 @@ between Kingside  Black = fromList [F8, G8]
 between Queenside White = fromList [B1, C1, D1]
 between Queenside Black = fromList [B8, C8, D8]
 
--- | The locations of pieces when they castle.
-square :: Side -> Colour -> Piece -> Coord
-square Queenside White Rook = coord A1
-square Queenside Black Rook = coord A8
-square Kingside  White Rook = coord H1
-square Kingside  Black Rook = coord H8
-square _ White King = coord E1
-square _ Black King = coord E8
-square _ _ _ = coord OffBoard
+-- | The locations of pieces before they castle.
+squareBefore :: Side -> Colour -> Piece -> Mask
+squareBefore Queenside White Rook = mask $ coord A1
+squareBefore Queenside Black Rook = mask $ coord A8
+squareBefore Kingside  White Rook = mask $ coord H1
+squareBefore Kingside  Black Rook = mask $ coord H8
+squareBefore _ White King = mask $ coord E1
+squareBefore _ Black King = mask $ coord E8
+squareBefore _ _ _ = 0
+
+-- | the locations of pieces after they castle
+squareAfter :: Side -> Colour -> Piece -> Mask
+squareAfter Kingside  White Rook = mask $ coord F1
+squareAfter Kingside  White King = mask $ coord G1
+squareAfter Queenside Black Rook = mask $ coord D8
+squareAfter Queenside Black King = mask $ coord C8
+squareAfter Kingside  Black Rook = mask $ coord F8
+squareAfter Kingside  Black King = mask $ coord G8
+squareAfter Queenside White Rook = mask $ coord D1
+squareAfter Queenside White King = mask $ coord C1
+squareAfter _ _ _ = mask $ coord OffBoard
