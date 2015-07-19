@@ -40,6 +40,8 @@ data Game = Game { player       :: Colour           -- ^ current player
                  , fiftyStatus  :: Int              -- ^ fifty move rule
                  } deriving ( Eq )
 
+-- | Prints a bunch of information about a Game's state, Information about
+-- the future is left out to prevent
 instance Show Game where
   show g = "\nplayer: "  ++ show (player g)      ++
            "\nply: "     ++ show (ply g)         ++
@@ -80,4 +82,5 @@ togglePlayer g = g { player = enemy $ player g }
 -- of a 'Game'.
 type Rule = Game -> [Game]
 
+-- | Track if a game is drawn, or if a draw was just offered.
 data DrawStatus = Claimable | Normal | Offered deriving ( Show, Eq )

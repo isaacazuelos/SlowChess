@@ -12,6 +12,8 @@ import Game.SlowChess.Move.Internal
 import Game.SlowChess.Game.Internal
 import Game.SlowChess.Piece
 
+-- | The fifty move rule. A game can be drawn after 50 moves where nothing
+-- is captured or no pawns move.
 fifty :: Rule
 fifty g = return g { fiftyStatus = updateFifty g }
 

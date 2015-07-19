@@ -9,13 +9,10 @@
 
 module Game.SlowChess.AI.MinMax where
 
-import           Data.Function              (on)
-import           Data.List                  (maximumBy)
-
 import           Game.SlowChess.AI.Internal
 
-minmax :: GameTree g => Int -> g -> (g, Score)
+-- | A minmax-like tree search.
+minmax :: GameTree g => Int -> g -> Score
 minmax d g
     | d == 0 || terminal g = score g
-    | otherwise = maximumBy (compare `on` snd) $
-                    map (minmax (pred d)) (children g)
+    | otherwise = maximum $ map (minmax (pred d)) (children g)

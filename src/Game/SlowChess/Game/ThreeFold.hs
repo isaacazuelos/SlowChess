@@ -14,6 +14,8 @@ import Game.SlowChess.Game.Internal
 -- Note that we can't just check the board, since the availability of /en
 -- passant/ moves depends on the previous moves.
 
+-- | the threefold move rule. A draw can be claimed if the game has been in
+-- the same position (with the same posible moves) three times.
 threeFold :: Rule
 threeFold g = return $ if 2 == length (filter (same g) (history g))
                          then g { drawStatus = Claimable }
@@ -21,6 +23,9 @@ threeFold g = return $ if 2 == length (filter (same g) (history g))
 
 -- | Games are the same (for the purpose of this rule) if:
 --
+-- 1. The boards are the same.
+-- 2. The allowable moves are the same.
+-- 3. The game's castle status hasn't changed.
 same :: Game -> Game -> Bool
 same a b = player a == player b
             && board a == board b
