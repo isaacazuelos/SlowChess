@@ -17,5 +17,14 @@ type Score = Float
 -- | A game tree is the tree made by a game and it's possible futures.
 class GameTree g where
     terminal :: g -> Bool
-    score    :: g -> Score
+    evaluate :: g -> Score
     children :: g -> [g]
+
+-- | Players used to track if the current tree node is one we're
+-- maximizing or minimizing the score for.
+data Player = MaximizingPlayer | MinimizingPlayer deriving (Show, Eq)
+
+-- | The enemy of a player is the other player.
+enemy :: Player -> Player
+enemy MaximizingPlayer = MinimizingPlayer
+enemy MinimizingPlayer = MaximizingPlayer
