@@ -19,6 +19,7 @@ module Game.SlowChess.Mask ( -- * Constructing Masks
                            , minus
                            , invert
                            , submask
+                           , count
                              -- * Movement
                            , hop
                              -- * Printing tools
@@ -131,6 +132,10 @@ invert = complement
 -- > 0 0 0           1 0 1
 submask :: Mask -> Mask -> Bool
 submask a b = b == a <> b
+
+-- | Count the number of pieces on the mask.
+count :: Mask -> Int
+count = popCount
 
 -- ** Movement
 

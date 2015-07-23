@@ -22,6 +22,7 @@ module Game.SlowChess.Game ( -- * Constructors
                            , fifty
                            , threeFold
                              -- * Accessors
+                           , player
                            , future
                            , board
                            , ply

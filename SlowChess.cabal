@@ -21,8 +21,12 @@ source-repository head
 library
     build-depends:
         base >=4 && <5,
-        containers
+        containers,
+        mtl
     exposed-modules:
+        Game.SlowChess.AI
+        Game.SlowChess.AI.Internal
+        Game.SlowChess.AI.Negamax
         Game.SlowChess.Board
         Game.SlowChess.Coord
         Game.SlowChess.Game
@@ -36,6 +40,7 @@ library
         Game.SlowChess.Move.Internal
         Game.SlowChess.Move.Promotion
         Game.SlowChess.Piece
+        Game.SlowChess.Score
     exposed: True
     buildable: True
     default-language: Haskell2010
@@ -50,14 +55,14 @@ executable slowchess
     buildable: True
     default-language: Haskell2010
     hs-source-dirs: cli
-    ghc-options: -Wall
+    ghc-options: -Wall -O2
 
 test-suite tests
     main-is:             tests.hs
     hs-source-dirs:      tests
     default-language:    Haskell2010
     type:                exitcode-stdio-1.0
-    ghc-options:         -Wall -fno-warn-missing-signatures
+    ghc-options:         -Wall
     build-depends:
         SlowChess,
         base  >= 4 && < 5,
