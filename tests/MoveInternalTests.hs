@@ -10,6 +10,8 @@ import           Test.Tasty
 import           Test.Tasty.HUnit
 import           Test.Tasty.QuickCheck
 
+import           Data.List                    ((\\))
+
 import           Game.SlowChess.Board
 import           Game.SlowChess.Coord
 import           Game.SlowChess.Move.Internal
@@ -19,7 +21,7 @@ import           Game.SlowChess.Piece
 targets = foldl (\ a m -> a <> maybe 0 mask (destination m)) 0
 
 tests = testGroup "Move.Internal Tests"
-    [ testSteps, testCasts, testEach, testLands]
+    [ testSteps, testCasts, testEach ]
 
 testSteps = testGroup "Test stepping"
     [testStepOff, testStepBlank, testNoStepFriendly, testStepEnemy]
@@ -62,7 +64,4 @@ testCastEnemies = testCase "Casting stops at enemies"
         b = setMany castBoard [(White, Rook, [E1])]
 
 testEach = testCase "Test each on a staring board"
-    (each White Pawn starting @?= map coord [A2 .. H2])
-
-testLands = testProperty "Test that masks land on themselves"
-    (\ m -> all (not . null . lands m) (split m))
+    (each White Pawn starting \\ map coord [A2 .. H2] @?= [])

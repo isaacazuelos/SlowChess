@@ -23,7 +23,7 @@ module Game.SlowChess.Board ( -- * Board Creation
                             , nonFriendly
                             ) where
 
-import           Data.Monoid          ((<>))
+import           Data.Bits            (xor, complement)
 
 import           Game.SlowChess.Coord
 import           Game.SlowChess.Mask  hiding (fromList)
@@ -34,14 +34,14 @@ import           Game.SlowChess.Piece
 -- | A chess board is represented as the state of the pieces of both sides.
 -- This is done by keeping track of all of the places where there are pieces
 -- of a colour, and also where there are pieces of a piece type.
-data Board = Board { pawns   :: Mask
-                   , rooks   :: Mask
-                   , knights :: Mask
-                   , bishops :: Mask
-                   , kings   :: Mask
-                   , queens  :: Mask
-                   , whites  :: Mask
-                   , blacks  :: Mask
+data Board = Board { pawns   :: !Mask
+                   , rooks   :: !Mask
+                   , knights :: !Mask
+                   , bishops :: !Mask
+                   , kings   :: !Mask
+                   , queens  :: !Mask
+                   , whites  :: !Mask
+                   , blacks  :: !Mask
                    } deriving ( Eq )
 
 -- | Boards are prettied like masks, but with the Unicode characters for the
@@ -54,7 +54,7 @@ instance Show Board where
                     , boardStringTiles "H" $ get Black Knight b
                     , boardStringTiles "B" $ get Black Bishop b
                     , boardStringTiles "Q" $ get Black Queen  b
-                    , boardStringTiles "K" $ get Black King   b 
+                    , boardStringTiles "K" $ get Black King   b
                     , boardStringTiles "P" $ get Black Pawn   b
                     , boardStringTiles "r" $ get White Rook   b
                     , boardStringTiles "h" $ get White Knight b
@@ -66,19 +66,23 @@ instance Show Board where
 
 -- | All of the positions held by pieces of a colour.
 material :: Colour -> Board -> Mask
-material White = whites
-material Black = blacks
+{-# INLINE material #-}
+material White (Board _ _ _ _ _ _ w _) = w
+material Black (Board _ _ _ _ _ _ _ b) = b
 
 -- | All of the empty squares on the board.
 blanks :: Board -> Mask
-blanks b = invert (material White b <> material Black b)
+blanks b = invert (squish (material White b) (material Black b))
 
 -- | All of the squares not held by pieces of a colour --- so either
 -- blanks or enemy pieces.
+{-# INLINE nonFriendly #-}
 nonFriendly :: Colour -> Board -> Mask
-nonFriendly c b = invert (material c b)
+nonFriendly White (Board _ _ _ _ _ _ (Mask w) _) = Mask (complement w)
+nonFriendly Black (Board _ _ _ _ _ _ _ (Mask b)) = Mask (complement b)
 
 -- | A blank board is the board with no pieces on it.
+{-# INLINE blank #-}
 blank :: Board
 blank = Board 0 0 0 0 0 0 0 0
 
@@ -114,8 +118,8 @@ modify :: Colour -> Piece -> Board -> Mask -> Board
 modify c p b m = case c of
     White -> (updatePieces m c p b) { whites = newMaterial }
     Black -> (updatePieces m c p b) { blacks = newMaterial }
-  where newMaterial      = m <> (material c b `minus` get c p b)
-        newPieces    m' c' p' b' = m' <> get (enemy c') p' b'
+  where newMaterial              = squish m (material c b `minus` get c p b)
+        newPieces    m' c' p' b' = squish m' (get (enemy c') p' b')
         updatePieces m' c' p' b' = case p of
             Rook   -> b' { rooks   = newPieces m' c' p' b' }
             Knight -> b' { knights = newPieces m' c' p' b' }
@@ -126,31 +130,35 @@ modify c p b m = case c of
 
 -- | Apply a mask transformation to each mask in mask in the board — even the
 -- material masks.
+{-# INLINE forEach #-}
 forEach :: Board -> (Mask -> Mask) -> Board
 forEach (Board a b c d e f g h) f' = Board (f' a) (f' b) (f' c) (f' d)
                                            (f' e) (f' f) (f' g) (f' h)
 
+
 -- | All the positions on a board which appear on more than one mask. The
 -- following property holds:
 --
--- > conflicts (set c p b m) == mempty
+-- > conflicts (set c p b m) == conflicts b
 conflicts :: Board -> Mask
-conflicts (Board a b c d e f g h) = foldr xor 0 [a, b, c, d, e, f, g, h]
-  where xor p q = both (p <> q) (invert (both p q))
+conflicts (Board a b c d e f g h) = foldr xor' 0 [a, b, c, d, e, f, g, h]
+  where xor' (Mask x) (Mask y) = Mask (xor x y)
 
 -- | Set the positions of a type of piece on a board, ensuring that no other
 -- type of piece is at that position by overwriting them.
+{-# INLINE set #-}
 set :: Colour -> Piece -> Board -> Mask -> Board
 set c p b m = modify c p (wipe b m) m
 
 -- | Wipe the pieces off some squares.
+{-# INLINE wipe #-}
 wipe :: Board -> Mask -> Board
 wipe b m = forEach b (`minus` m)
 
--- | Update the positions of a type of piece on a board using a function.
--- This is equivalent to getting, applying the function then setting.
-update :: Colour -> Piece -> Board -> (Mask -> Mask) -> Board
-update c p b f = set c p b (f (get c p b))
+-- | Update the positions of a type of piece on a board using a mask of pieces
+-- to add and wipe.
+update :: Colour -> Piece -> Board -> Mask -> Mask -> Board
+update c p b a = wipe (set c p b (squish a (get c p b)))
 
 -- | Set a bunch of pieces up at once. This function is designed to make it
 -- easy to write Haskell to set up custom boards. Like 'set' it prevents

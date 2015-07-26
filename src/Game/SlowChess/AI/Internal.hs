@@ -25,6 +25,6 @@ class GameTree g where
 data Player = MaximizingPlayer | MinimizingPlayer deriving (Show, Eq)
 
 -- | The enemy of a player is the other player.
-enemy :: Player -> Player
-enemy MaximizingPlayer = MinimizingPlayer
-enemy MinimizingPlayer = MaximizingPlayer
+other :: Player -> Player
+other MaximizingPlayer = MinimizingPlayer
+other MinimizingPlayer = MaximizingPlayer

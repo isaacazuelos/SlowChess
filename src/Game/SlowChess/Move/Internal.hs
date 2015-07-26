@@ -19,39 +19,33 @@ module Game.SlowChess.Move.Internal ( -- * Constructors
                                     , step
                                     , cast
                                     , each
-                                    , lands
                                     ) where
-
-import           Control.Monad        (mzero)
 
 import           Game.SlowChess.Board
 import           Game.SlowChess.Coord
-import           Game.SlowChess.Mask  hiding (hop)
 import           Game.SlowChess.Piece
 
 -- | Represents the changes made by in a single ply.
 --
 --   * When a 'Move' happens, the source becomes blank and the target is
 --     overwritten with the piece moved.
-data Ply = Move      Colour Piece Coord Coord -- ^ player piece source target
-         | Promotion Colour Piece Coord Coord -- ^ player piece source target
-         | EnPassant Colour Coord Coord Coord -- ^ player source target cap
-         | StepTwice Colour Coord Coord Coord -- ^ player source target cap
-         | Castle    Colour Side              -- ^ player side
-           deriving ( Show, Eq )
-
--- | Colour-relative board sides, used for knowing which side a castle move
--- was done to.
-data Side = Kingside | Queenside deriving ( Show, Eq )
+data Ply =
+      Move      Colour Piece Coord {-# UNPACK #-} !Coord -- ^ player piece source target
+    | Promotion Colour Piece Coord Coord -- ^ player piece source target
+    | EnPassant Colour Coord Coord Coord -- ^ player source target cap
+    | StepTwice Colour Coord Coord Coord -- ^ player source target cap
+    | Castle    Colour Side              -- ^ player side
+      deriving ( Show, Eq )
 
 -- | Move out in straight lines along the directions until either the pieces
 -- choose to stop, further motion would mean stepping on a friendly unit, or
 -- the last step taken removed an enemy unit.
 cast :: [Direction] -> Piece -> Colour -> Board -> [Ply]
-cast ds p c b = do direction <- ds
-                   source    <- each c p b
-                   target    <- castBasic c b direction source
-                   return $ Move c p source target
+cast ds p c b = do
+    direction <- ds
+    source    <- each c p b
+    target    <- castBasic c b direction source
+    return $ Move c p source target
 
 -- | Where the target square of a ply is, assuming that makes sense for the
 -- type of movement.
@@ -62,39 +56,24 @@ destination (StepTwice _ _ t _) = Just t
 destination (EnPassant _ _ t _) = Just t
 destination _ = Nothing
 
--- | Does a ply's target move it to any of the places indicated in the mask?
--- Typically this is used with the mask as a filter to pick out blanks or
--- enemies.
---
--- For example, to compute where knights might land on blanks you might do:
---
--- > do p <- each Black Knight staring)
--- >    t <- jumpKnight p
--- >    lands (blanks b) t
-lands :: Mask -> Coord -> [Coord]
-lands m p = if p `on` m then return p else mzero
-
--- | Step each piece of a kind and colour on a board in a direction, with no
--- regard for if the step is onto a valid location, returns the board.
-stepAny :: Direction -> Coord -> [Coord]
-stepAny d m = if hop d m == nowhere then mzero else return (hop d m)
-
 -- | Step each piece of a kind and colour on a board in a direction, landing
 -- only on non-friendly squares  -- i.e. blanks or enemy units.
+-- {-# INLINE step #-}
 step :: Colour -> Board -> Direction -> Coord -> [Coord]
-step c b d s = stepAny d s >>= lands (nonFriendly c b)
+step c b d s = [hop d s | hop d s `on` nonFriendly c b]
 
 -- | Steps a piece over blank squares until it hits (and captures) a single
 -- enemy. This is the type of motion used by rooks, bishops and queens.
+{-# INLINE castBasic #-}
 castBasic :: Colour -> Board -> Direction -> Coord -> [Coord]
-castBasic c b d s = do candidate <- step c b d s
-                       if candidate `on` blanks b
-                         then candidate : castBasic c b d candidate
-                         else if candidate `on` material (enemy c) b
-                              then return candidate
-                              else mzero
+castBasic c b d = go
+  where go s
+          | candidate `on` blanks b             = candidate : go candidate
+          | candidate `on` material (enemy c) b = [candidate]
+          | otherwise = []
+            where candidate = hop d s
 
--- | Returns a list of each of/ the specified kind of piece on a mask of it's
+-- | Returns a list of each of the specified kind of piece on a mask of it's
 -- own.
 each :: Colour -> Piece -> Board -> [Coord]
 each c p b = split (get c p b)

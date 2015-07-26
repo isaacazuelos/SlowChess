@@ -13,17 +13,15 @@
 
 module Game.SlowChess.Move.EnPassant (enPassant) where
 
-import           Data.Monoid                  ((<>))
-
 import           Game.SlowChess.Board
 import           Game.SlowChess.Coord
 import           Game.SlowChess.Game.Internal
+import           Game.SlowChess.Mask
 import           Game.SlowChess.Move.Internal
 import           Game.SlowChess.Piece
 
 -- | The /en passant/ plys which follow from a current game board.
-enPassant :: Rule
--- This is kind of an abuse of pattern matching, I think.
+enPassant :: Game -> [Game]
 enPassant g = case ply g of
                 Just (StepTwice _ _ t skipped) -> do
                   let c = player g
@@ -34,8 +32,7 @@ enPassant g = case ply g of
                   if attack /= skipped
                     then []
                     else do let newPly = EnPassant c source skipped t
-                            let wipped = wipe b (mask source <> mask t)
-                            let placePawn = (<> mask skipped)
-                            let newBoard = update c Pawn wipped placePawn
+                            let wipped = squish (mask source) (mask t)
+                            let newBoard = update c Pawn b wipped (mask skipped)
                             return $ next g newPly newBoard
                 _ -> []

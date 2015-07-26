@@ -1,5 +1,4 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-
 -- |
 -- Module      : Game.SlowChess.Mask
 -- Description : Piece layout masks and movements.
@@ -16,6 +15,7 @@ module Game.SlowChess.Mask ( -- * Constructing Masks
                            , toList
                              -- * Mask Operations
                            , both
+                           , squish
                            , minus
                            , invert
                            , submask
@@ -29,7 +29,7 @@ module Game.SlowChess.Mask ( -- * Constructing Masks
                            ) where
 
 import           Data.Bits
-import           Data.List            (intersperse, sort, (\\))
+import           Data.List            (intersperse, sort)
 import           Data.Monoid
 import           Data.Word
 
@@ -62,7 +62,7 @@ newtype Mask = Mask Word64 deriving ( Eq, Bits, Num, Ord )
 -- > 0 0 1    1 0 0   1 0 1
 instance Monoid Mask where
   mempty  = 0
-  mappend = (.|.)
+  mappend = squish
 
 -- | Masks are prettied using the normal grid, with @#@ indicating an occupied
 -- square.
@@ -79,7 +79,8 @@ instance Monoid Mask where
 -- > 1|_|_|_|_|_|_|_|#|
 -- >   a b c d e f g h
 instance Show Mask where
-  show = buildBoardString . boardStringTiles "#"
+  show (Mask m) = buildBoardString (boardStringTiles "#" (Mask m))
+                    ++ "\nMask " ++ show m
 
 -- | Create a mask which has only a single index set.
 --
@@ -97,66 +98,57 @@ maskFromIndex i = if (i >= 0) && (i < 64)
 -- > fromList [0,4,8] = 0 1 0
 -- >                    0 0 1
 fromList :: [Int] -> Mask
-fromList = foldr ((<>) . maskFromIndex) mempty
+fromList = foldr (squish . maskFromIndex) 0
 
 -- | Build a list of square indicies from a mask.
 --
 -- @fromList . toList = toList . fromList = id@
 toList :: Mask -> [Int]
-toList m = filter (\i -> mempty /= m .&. maskFromIndex i) [0..63]
+toList (Mask m) = filter (testBit m) [0..63]
 
 -- | All the squares which are occupied on exactly both of the inputs.
+{-# INLINE both #-}
 both :: Mask -> Mask -> Mask
-both = (.&.)
+both (Mask a) (Mask b) = Mask (a .&. b)
+
+-- | All the squares which are occupied on one or both of the inputs.
+{-# INLINE squish #-}
+squish :: Mask -> Mask -> Mask
+squish (Mask a) (Mask b) = Mask (a .|. b)
 
 -- | Unmark all the position in the first mask that are held by the second.
 --
 -- > 1 0 1         1 1 0   0 0 1
 -- > 0 1 0 `minus` 1 1 0 = 0 0 0
 -- > 1 0 1         0 0 0   1 0 1
+{-# INLINE minus #-}
 minus :: Mask -> Mask -> Mask
-minus a b = a .&. complement b
+minus (Mask a) (Mask b) = Mask (a .&. complement b)
 
 -- | Inverts which positions are marked and which are not.
 --
 -- >        1 0 1   0 0 1
 -- > invert 0 1 0 = 0 0 0
 -- >        1 0 1   1 0 1
+{-# INLINE invert #-}
 invert :: Mask -> Mask
-invert = complement
+invert (Mask a) = Mask (complement a)
 
 -- | Is one mask contained in the other?
 --
 -- > 0 0 0           1 0 1
 -- > 0 1 0 `submask` 0 1 0 = True
 -- > 0 0 0           1 0 1
+{-# INLINE submask #-}
 submask :: Mask -> Mask -> Bool
-submask a b = b == a <> b
+submask (Mask a ) (Mask b) = b == a .|. b
 
 -- | Count the number of pieces on the mask.
+{-# INLINE count #-}
 count :: Mask -> Int
-count = popCount
+count (Mask a) = popCount a
 
 -- ** Movement
-
--- The basic motions are done through shifts. Since these shifts *could* cause
--- certain positions to wrap around, we need to bitwise 'and' the board to be
--- moved with a mask that indicates which positions *can* be moved in that
--- direction.
-
--- | The pieces indicated by a mask can only move in a direction if doing so
--- would not cause the piece to move off the board. @'canMove dir mask'@
--- removes any positions in @mask@ which could not move in the direction
--- @dir@.
-moveable :: Direction -> Mask -> Mask
-moveable N  = (.&.) $ fromList [0..55]
-moveable NE = moveable N . moveable E
-moveable E  = (.&.) $ fromList ([0..63] \\ [7,15,23,31,39,47,55,63])
-moveable SE = moveable S . moveable E
-moveable S  = (.&.) $ fromList [8..63]
-moveable SW = moveable S . moveable E
-moveable W  = (.&.) $ fromList ([0..63] \\ [0,8,16,24,32,40,48,56])
-moveable NW = moveable N . moveable W
 
 -- |  Hop moves the pieces of a mask in the specified direction.
 --
@@ -165,18 +157,16 @@ moveable NW = moveable N . moveable W
 -- these basic motions.
 --
 -- The pieces indicated by a mask can only move in a direction if doing so
--- would not cause the piece to move off the board, so it holds that:
---
--- > hop d m == hop d (moveable d m)
+-- would not cause the piece to move off the board.
 hop :: Direction -> Mask -> Mask
-hop N  = (`shiftL` 8) . moveable N
-hop NE = hop N . hop E
-hop E  = (`shiftL` 1) . moveable E
-hop SE = hop S . hop E
-hop S  = (`shiftR` 8) . moveable S
-hop SW = hop S . hop W
-hop W  = (`shiftR` 1) . moveable W
-hop NW = hop N . hop W
+hop N  (Mask m) = Mask (unsafeShiftL (72057594037927935    .&.  m) 8)
+hop S  (Mask m) = Mask (unsafeShiftR (18446744073709551360 .&.  m) 8)
+hop E  (Mask m) = Mask (unsafeShiftL (9187201950435737471  .&.  m) 1)
+hop W  (Mask m) = Mask (unsafeShiftR (18374403900871474942 .&.  m) 1)
+hop NE (Mask m) = Mask (unsafeShiftL (35887507618889599    .&.  m) 9)
+hop SE (Mask m) = Mask (unsafeShiftR (9187201950435737344  .&.  m) 7)
+hop SW (Mask m) = Mask (unsafeShiftR (18374403900871474688 .&.  m) 9)
+hop NW (Mask m) = Mask (unsafeShiftL (71775015237779198    .&.  m) 7)
 
 -- * Printing Masks
 

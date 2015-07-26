@@ -13,3 +13,4 @@ cabal.config
 .stack-work
 stack.yaml
 notes.md
+prof.prof

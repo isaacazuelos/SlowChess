@@ -32,7 +32,7 @@ testFromList = testProperty "Coord.fromList matches Mask.fromList"
     (\ xs -> OffBoard `notElem` xs ==> fromList xs == (M.fromList . map fromEnum) xs)
 
 testMergeSplit = testProperty "merge undoes split"
-    (\ m -> m == (foldr merge mempty. split) m)
+    (\ m -> m == (foldr merge mempty . split) m)
 
 testOn = testProperty "We can tell if a coord is on a mask"
     (\ c -> c `on` fromList [name c])
