@@ -45,17 +45,17 @@ toPiece ToKnight = Knight
 mustPromote :: Game -> Bool
 mustPromote g = case ply g of
     Just (Move c Pawn _ t) -> mask t `submask` furthestRank c
-    _                      -> False
+    _ -> False
 
 promote :: Game -> PromoteTo -> [Game]
 promote g pt = case ply g of
     Just (Move c' Pawn s t) -> if t `on` furthestRank c'
-                                 then newGame s t
-                                 else []
-    _                       -> []
+                                  then newGame s t
+                                  else []
+    _ -> []
   where newBoard t  = update (player g) (toPiece pt) (board g) (<> mask t)
         newPly      = Promotion (enemy (player g)) (toPiece pt)
-        newGame s t = return $ g { ply = Just (newPly s t)
+        newGame s t = return $ g { ply = Just $ newPly s t
                                  , board = newBoard t
                                  }
 
@@ -66,6 +66,6 @@ furthestRank White = fromList [A8, B8, C8, D8, E8, F8, G8, H8]
 furthestRank Black = fromList [A1, B1, C1, D1, E1, F1, G1, H1]
 
 -- | Perform all promotions that apply to a game.
-promotions :: Rule
+promotions :: Game -> [Game]
 promotions g = if null gs then return g else gs
   where gs = [ToQueen, ToRook, ToBishop, ToKnight] >>= promote g

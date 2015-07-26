@@ -22,7 +22,6 @@
 
 module Game.SlowChess.Move.Castle ( castle, allOptions ) where
 
-import           Data.List                    (delete)
 import           Data.Monoid                  ((<>))
 
 import           Game.SlowChess.Board
@@ -36,15 +35,15 @@ import           Game.SlowChess.Move.Internal
 -- | Returns the mostly-legal castling moves for a game. This even includes
 -- plys that would put the player in check. Since you /can't/ put youself into
 -- check, that's ensured elsewhere.
-castle :: Rule
+castle :: Game -> [Game]
 castle g = do s <- [Kingside, Queenside]
               let c = player g
               let p = Castle c s
               if canCastle g s
-                  then return
-                    (next g p (blindlyCastle c (board g) s))
-                        { castleStatus = delete (c, s) (castleStatus g) }
+                  then return $! nextGame c s p
                   else []
+  where nextGame c s p = disableCastleOption c s
+                            $ next g p (blindlyCastle c (board g) s)
 
 -- | All possible castling options
 allOptions :: [(Colour, Side)]
@@ -62,8 +61,11 @@ blindlyCastle c b s = update c King placedRook (<> squareAfter s c King)
 
 -- | Is the board set up properly for a player to be able to castle?
 canCastle :: Game -> Side -> Bool
-canCastle g s = hasBlanks g s && hasOption g s && piecesAreRight g s
+canCastle g s = hasBlanks g s
+                    && hasCastleOption (player g) s g
+                    && piecesAreRight g s
 
+-- | Are all the pieces where they ought to be?
 piecesAreRight :: Game -> Side -> Bool
 piecesAreRight g s = (squareBefore s c Rook `submask` get c Rook b)
                         && (squareBefore s c King `submask` get c King b)
@@ -73,10 +75,6 @@ piecesAreRight g s = (squareBefore s c Rook `submask` get c Rook b)
 -- | Are there blansk where there needs to be?
 hasBlanks :: Game -> Side -> Bool
 hasBlanks g s = between s (player g) `submask` blanks (board g)
-
--- | Does the game still have the option to castle?
-hasOption :: Game -> Side -> Bool
-hasOption g s = (player g, s) `elem` castleStatus g
 
 -- | Are there the blanks between the king and rook required?
 between :: Side -> Colour -> Mask

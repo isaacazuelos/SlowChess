@@ -2,16 +2,18 @@
 
 module FIDETests (tests) where
 
-import           Test.Tasty                    (testGroup)
-import           Test.Tasty.HUnit              (assert, testCase, (@?=), (@?))
+import           Test.Tasty                   (testGroup)
+import           Test.Tasty.HUnit             (assert, testCase, (@?), (@?=))
 
-import           Data.Maybe                    (mapMaybe)
+import           Data.Maybe                   (mapMaybe)
 
 import           Game.SlowChess.Board
 import           Game.SlowChess.Coord
 import           Game.SlowChess.Game
-import           Game.SlowChess.Mask           hiding (fromList)
+import           Game.SlowChess.Game.Internal
+import           Game.SlowChess.Mask          hiding (fromList)
 import           Game.SlowChess.Move
+import           Game.SlowChess.Move.Castle
 import           Game.SlowChess.Move.Internal
 import           Game.SlowChess.Piece
 
@@ -28,13 +30,13 @@ testCheckmate = testGroup "1.2 - Checkmate Rules"
     [ testInCheckmate, testNotInCheckmate ]
 
 checkmateGame1 :: Game
-checkmateGame1 = challange White $ setMany blank [ (White, King, [F5])
+checkmateGame1 = challange Black $ setMany blank [ (White, King, [F5])
                                                  , (Black, King, [H5])
                                                  , (White, Rook, [H1])
                                                  ]
 
 checkmateGame2 :: Game
-checkmateGame2 = challange White $ setMany blank [ (Black, King, [H5]) ]
+checkmateGame2 = challange Black $ setMany blank [ (Black, King, [H5]) ]
 
 testInCheckmate = testCase "Checkmate in affermative" $
     checkmate checkmateGame1 @?
@@ -137,9 +139,10 @@ testPawnAttack = testCase "3.7.c - Pawns attack diagonally forward"
   where result = targets (movePawns Black pawnTestBoard2)
 
 testEnPassant = testCase "3.7.d - En passant moves"
-                 ((expected `elem` mapMaybe ply (lookAhead 2 game)) @?
-                    "En Passant move missing")
+                 (expected `elem` results @?
+                    "no EnPassant in: " ++ show results)
   where expected = EnPassant White (coord D5) (coord E6) (coord E5)
+        results  = mapMaybe ply (future game >>= future)
         game = challange Black $ setMany blank [ (Black, Pawn, [E7])
                                                , (White, Pawn, [D5])
                                                ]
@@ -148,7 +151,7 @@ testPromotion = testCase "3.7.e - Pawn promotion"
     (expected `elem` result @? "no promotion in:\n\t" ++ show result)
   where expected = Promotion White Queen (coord A7) (coord A8)
         newBoard = challange White (set White Pawn blank (fromList [A7]))
-        result = mapMaybe ply $ future newBoard >>= promotions
+        result = mapMaybe ply $ future newBoard
 
 testKingMoves = testGroup "Section 3.8 - Kings" [testKingSteps, testCastling]
 
@@ -166,7 +169,7 @@ testCastling = testGroup "3.8.b - Castling" [ testBlackKingside
                                             ]
 
 castleGame :: Colour -> Game
-castleGame c = enableCastling (challange c b)
+castleGame c = enableAllCastleOptions (challange c b)
   where b = setMany blank [ (Black, King, [E8]), (Black, Rook, [H8])
                           , (White, Rook, [A1]), (White, King, [E1])
                           ]
@@ -180,7 +183,7 @@ testWhiteQueenside = testCase "White queenside castling" (result @?= expected)
         expected = [Castle White Queenside]
 
 castleGame2 :: Game
-castleGame2 = enableCastling (challange White b)
+castleGame2 = enableAllCastleOptions (challange White b)
   where b = setMany blank [ (White, Rook,  [A1]), (White, King, [E1])
                           , (Black, Queen, [B2])
                           ]
@@ -190,7 +193,7 @@ testCastleAttack = testCase "3.8.b.2.a"
   where plys = mapMaybe ply (future castleGame2)
 
 castleGame3 :: Game
-castleGame3 = enableCastling $ challange White b
+castleGame3 = enableAllCastleOptions $ challange White b
   where b = setMany blank [ (White, Rook,   [A1]), (White, King, [E1])
                           , (White, Knight, [B1])
                           ]
@@ -201,13 +204,13 @@ testCastleJump = testCase "3.8.b.2.b"
 testCheck = testGroup "3.9 - Check rules" [ testInCheck, testNotInCheck ]
 
 checkGame1 :: Game
-checkGame1 = challange Black $ setMany blank [ (White, King,  [A1])
+checkGame1 = challange White $ setMany blank [ (White, King,  [A1])
                                              , (Black, Queen, [A8])
                                              , (Black, King,  [D4])
                                              ]
 
 checkGame2 :: Game
-checkGame2 = challange Black $ setMany blank [ (White, King, [A1])
+checkGame2 = challange White $ setMany blank [ (White, King, [A1])
                                              , (Black, King, [H8])
                                              ]
 

@@ -58,3 +58,7 @@ forward Black = S
 forwardAttack :: Colour -> [Direction]
 forwardAttack White = [NE, NW]
 forwardAttack Black = [SE, SW]
+
+-- | Colour-relative board sides, used for knowing which side a castle move
+-- was done to.
+data Side = Kingside | Queenside deriving ( Show, Eq )

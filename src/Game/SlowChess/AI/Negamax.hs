@@ -16,4 +16,4 @@ nega :: GameTree g => Int -> Player -> g -> Score
 nega d p g = if d == 0 || terminal g
                 then evaluate g
                 else maximum scoredChildren
-  where scoredChildren = map (negate . nega (pred d) (enemy p)) (children g)
+  where scoredChildren = map (negate . nega (pred d) (other p)) (children g)

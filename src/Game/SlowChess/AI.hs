@@ -4,7 +4,7 @@
 -- License     : MIT License
 -- Maintainer  : Isaac Azuelos
 --
--- This module ties together the game, scoreing and tree searching together
+-- This module ties together the game, scoring and tree searching together
 -- to provide a way of suggesting
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
@@ -14,7 +14,7 @@ module Game.SlowChess.AI where
 import           Game.SlowChess.AI.Internal
 import           Game.SlowChess.AI.Negamax
 import           Game.SlowChess.Game
-import           Game.SlowChess.Score
+import           Game.SlowChess.Evaluate
 
 import           Data.List                  (sortBy)
 import           Data.Ord                   (comparing)
@@ -23,7 +23,7 @@ import           Data.Ord                   (comparing)
 instance GameTree Game where
     terminal g = null (future g) || checkmate g
     children = future
-    evaluate = score
+    evaluate = eval
 
 -- | How many games into the future we look to pick the best game. Note that
 -- since (partial) knoledge of the future game state is needed to know if

@@ -22,8 +22,7 @@ import           Game.SlowChess.Move.Internal
 import           Game.SlowChess.Piece
 
 -- | The /en passant/ plys which follow from a current game board.
-enPassant :: Rule
--- This is kind of an abuse of pattern matching, I think.
+enPassant :: Game -> [Game]
 enPassant g = case ply g of
                 Just (StepTwice _ _ t skipped) -> do
                   let c = player g

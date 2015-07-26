@@ -20,6 +20,7 @@ module Game.SlowChess.Move ( -- * Move generation
                            , moves
                              -- * Helpful functions for working with moves
                            , targets
+                           , attacks
                              -- * Piece-specific moves
                            , moveKings
                            , moveQueens
@@ -27,17 +28,16 @@ module Game.SlowChess.Move ( -- * Move generation
                            , moveRooks
                            , moveKnights
                            , movePawns
-                             -- * Helpers
-                           , kingTargets
                            ) where
 
-import           Data.Monoid                   ((<>))
+import           Data.Monoid                  ((<>))
 
 import           Game.SlowChess.Board
 import           Game.SlowChess.Coord
 import           Game.SlowChess.Game.Internal
-import           Game.SlowChess.Mask           (Mask)
+import           Game.SlowChess.Mask          (Mask)
 import           Game.SlowChess.Move.Internal
+import           Game.SlowChess.Move.Promotion
 import           Game.SlowChess.Piece
 
 -- * All movements
@@ -45,12 +45,23 @@ import           Game.SlowChess.Piece
 -- | Uses the basic movment rules to generate all a bunch of movement
 -- possibilites.
 moves :: Game -> [Game]
-moves g = concat [ wrapSimple g movePawns
-                 , wrapSimple g moveKings
-                 , wrapSimple g moveQueens
-                 , wrapSimple g moveKnights
-                 , wrapSimple g moveBishops
-                 , wrapSimple g moveRooks
+moves g = (wrapSimple g movePawns >>= promotions) ++
+            concat [ wrapSimple g moveKings
+                   , wrapSimple g moveQueens
+                   , wrapSimple g moveKnights
+                   , wrapSimple g moveBishops
+                   , wrapSimple g moveRooks
+                   ]
+
+-- | All the squares attackable by a colour on a board.
+attacks :: Colour -> Board -> Mask
+attacks c b = foldl (\ m f -> m <> targets (f c b)) 0 movers
+  where movers = [ moveKings
+                 , moveQueens
+                 , moveKnights
+                 , moveBishops
+                 , moveRooks
+                 , movePawns
                  ]
 
 -- * Helpers
@@ -69,20 +80,16 @@ wrapSimple g simple = map (apply g) $ simple (player g) (board g)
 apply :: Game -> Ply -> Game
 -- We only cover the constructors we need, i.e. the ones used in this module.
 apply g m@(Move c p s t) = g'
-  where g' = g { player  = enemy (player g)
-               , board   = update c p (wipe (board g) (mask s)) (<> mask t)
-               , ply     = Just m
-               , past    = Just g
-               , _future = Nothing
+  where g' = g { player = enemy (player g)
+               , board  = update c p (wipe (board g) (mask s)) (<> mask t)
+               , ply    = Just m
                }
 apply g m@(StepTwice c s t _) = g'
-  where g' = g { player  = enemy (player g)
-             , board   = update c Pawn (wipe (board g) (mask s)) (<> mask t)
-             , ply     = Just m
-             , past    = Just g
-             , _future = Nothing
+  where g' = g { player = enemy (player g)
+             , board    = update c Pawn (wipe (board g) (mask s)) (<> mask t)
+             , ply      = Just m
              }
-apply _ _ = undefined -- See the above message
+apply _ p = error $ "Can't apply " ++ show p
 
 -- * Simple Movements
 
@@ -94,11 +101,6 @@ moveKings c b = do direction <- allDirections
                    source    <- each c King b
                    target    <- step c b direction source
                    return $ Move c King source target
-
--- | All the places a king can move to on the board. Useful for determining
--- if a board is in checkmate.
-kingTargets :: Colour -> Board -> Mask
-kingTargets c b = targets (moveKings c b)
 
 -- | Generates all the valid movements of the knights of a colour on a board.
 -- Knights are capable of moving to their target squares regardless of other
@@ -158,8 +160,8 @@ movePawns :: Colour -> Board -> [Ply]
 movePawns c b = captures ++ stepOnce ++ stepTwice
   where captures  = do attackDir <- forwardAttack c
                        source    <- each c Pawn b
-                       attacks   <- step c b attackDir source
-                       target    <- lands (material (enemy c) b) attacks
+                       attacked  <- step c b attackDir source
+                       target    <- lands (material (enemy c) b) attacked
                        return $ Move c Pawn source target
         stepOnce  = do source <- each c Pawn b
                        target <- step c b (forward c) source

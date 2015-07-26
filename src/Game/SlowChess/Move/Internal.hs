@@ -33,16 +33,13 @@ import           Game.SlowChess.Piece
 --
 --   * When a 'Move' happens, the source becomes blank and the target is
 --     overwritten with the piece moved.
-data Ply = Move      Colour Piece Coord Coord -- ^ player piece source target
-         | Promotion Colour Piece Coord Coord -- ^ player piece source target
-         | EnPassant Colour Coord Coord Coord -- ^ player source target cap
-         | StepTwice Colour Coord Coord Coord -- ^ player source target cap
-         | Castle    Colour Side              -- ^ player side
-           deriving ( Show, Eq )
-
--- | Colour-relative board sides, used for knowing which side a castle move
--- was done to.
-data Side = Kingside | Queenside deriving ( Show, Eq )
+data Ply =
+      Move      Colour Piece Coord Coord -- ^ player piece source target
+    | Promotion Colour Piece Coord Coord -- ^ player piece source target
+    | EnPassant Colour Coord Coord Coord -- ^ player source target cap
+    | StepTwice Colour Coord Coord Coord -- ^ player source target cap
+    | Castle    Colour Side              -- ^ player side
+      deriving ( Show, Eq )
 
 -- | Move out in straight lines along the directions until either the pieces
 -- choose to stop, further motion would mean stepping on a friendly unit, or
