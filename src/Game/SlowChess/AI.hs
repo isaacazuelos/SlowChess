@@ -32,5 +32,10 @@ maxSearchDepth :: Int
 maxSearchDepth = 3
 
 -- | Suggest one of the game's children
-suggest :: Game -> [Game]
-suggest = sortBy (comparing $ nega maxSearchDepth MaximizingPlayer) . children
+suggest :: Int -> Game -> Maybe Game
+suggest n g = case suggestions n g of
+                []  -> Nothing
+                x:_ -> Just x
+
+suggestions :: Int -> Game -> [Game]
+suggestions n = sortBy (comparing $ nega n MaximizingPlayer) . children
