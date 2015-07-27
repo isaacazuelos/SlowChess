@@ -25,12 +25,6 @@ instance GameTree Game where
     children = future
     evaluate = eval
 
--- | How many games into the future we look to pick the best game. Note that
--- since (partial) knoledge of the future game state is needed to know if
--- the game is in check, the actual depth searched is one larger.
-maxSearchDepth :: Int
-maxSearchDepth = 3
-
 -- | Suggest one of the game's children
 suggest :: Int -> Game -> Maybe Game
 suggest n g = case suggestions n g of

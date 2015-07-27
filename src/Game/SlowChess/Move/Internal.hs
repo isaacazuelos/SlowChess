@@ -34,7 +34,7 @@ import           Game.SlowChess.Piece
 --   * When a 'Move' happens, the source becomes blank and the target is
 --     overwritten with the piece moved.
 data Ply =
-      Move      Colour Piece Coord Coord -- ^ player piece source target
+      Move      Colour Piece Coord {-# UNPACK #-} !Coord -- ^ player piece source target
     | Promotion Colour Piece Coord Coord -- ^ player piece source target
     | EnPassant Colour Coord Coord Coord -- ^ player source target cap
     | StepTwice Colour Coord Coord Coord -- ^ player source target cap

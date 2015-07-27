@@ -18,13 +18,12 @@ module Game.SlowChess.Game ( -- * Constructors
                            , ply
                            , check
                            , checkmate
-                           , drawn
                            , drawAvailable
                            , future
+                           , toDepth
                            ) where
 
 import           Data.Monoid                   ((<>))
-
 
 import           Game.SlowChess.Board          hiding (update)
 import           Game.SlowChess.Game.Fifty
@@ -50,14 +49,19 @@ challange c b = update (unfoldFuture legal g)
                  , future = error "future unititialied."
                  }
 
--- * Game-using rules.
+-- | Build the complete tree to a specific depths, after which 'future' is
+-- always empty.
+toDepth :: Int -> Game -> Game
+toDepth 0 g = g { future = [] }
+toDepth n g = g { future = map (toDepth (pred n)) (future g) }
 
 -- | Generate the moves which might be legal, apart from the rules checked in
 -- 'updates'.
 genMoves :: Game -> [Game]
 genMoves g = moves g <> castle g <> enPassant g
 
--- | Do all the
+-- | Do all the updates. This means computing the checkmate, check, and fifty
+-- move rule status of a game.
 update :: Game -> Game
 update = updateCheckmate . updateCheck . fiftyMoveRule
 
@@ -85,5 +89,3 @@ updateCheck g = setCheck g isInCheck
         hasKing = kingPosition /= 0
         b = board g
         c = player g
-
--- * Working with games.

@@ -62,9 +62,9 @@ import           Game.SlowChess.Piece
 
 -- | The state of a game, where we explicitly store all the values
 -- we compute as we compute them.
-data Game = Game { player :: Colour
-                 , status :: GameStatus
-                 , board  :: Board
+data Game = Game { player :: !Colour
+                 , status :: {-# UNPACK #-} !GameStatus
+                 , board  :: {-# UNPACK #-} !Board
                  , ply    :: Maybe Ply
                  , future :: [Game]
                  } deriving ( Eq )

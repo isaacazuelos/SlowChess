@@ -34,14 +34,14 @@ import           Game.SlowChess.Piece
 -- | A chess board is represented as the state of the pieces of both sides.
 -- This is done by keeping track of all of the places where there are pieces
 -- of a colour, and also where there are pieces of a piece type.
-data Board = Board { pawns   :: Mask
-                   , rooks   :: Mask
-                   , knights :: Mask
-                   , bishops :: Mask
-                   , kings   :: Mask
-                   , queens  :: Mask
-                   , whites  :: Mask
-                   , blacks  :: Mask
+data Board = Board { pawns   :: !Mask
+                   , rooks   :: !Mask
+                   , knights :: !Mask
+                   , bishops :: !Mask
+                   , kings   :: !Mask
+                   , queens  :: !Mask
+                   , whites  :: !Mask
+                   , blacks  :: !Mask
                    } deriving ( Eq )
 
 -- | Boards are prettied like masks, but with the Unicode characters for the
@@ -54,7 +54,7 @@ instance Show Board where
                     , boardStringTiles "H" $ get Black Knight b
                     , boardStringTiles "B" $ get Black Bishop b
                     , boardStringTiles "Q" $ get Black Queen  b
-                    , boardStringTiles "K" $ get Black King   b 
+                    , boardStringTiles "K" $ get Black King   b
                     , boardStringTiles "P" $ get Black Pawn   b
                     , boardStringTiles "r" $ get White Rook   b
                     , boardStringTiles "h" $ get White Knight b
