@@ -49,6 +49,7 @@ cast ds p c b = do direction <- ds
                    source    <- each c p b
                    target    <- castBasic c b direction source
                    return $ Move c p source target
+{-# INLINE cast #-}
 
 -- | Where the target square of a ply is, assuming that makes sense for the
 -- type of movement.
@@ -70,28 +71,35 @@ destination _ = Nothing
 -- >    lands (blanks b) t
 lands :: Mask -> Coord -> [Coord]
 lands m p = if p `on` m then return p else mzero
+{-# INLINE lands #-}
 
 -- | Step each piece of a kind and colour on a board in a direction, with no
 -- regard for if the step is onto a valid location, returns the board.
 stepAny :: Direction -> Coord -> [Coord]
 stepAny d m = if hop d m == nowhere then mzero else return (hop d m)
+{-# INLINE stepAny #-}
 
 -- | Step each piece of a kind and colour on a board in a direction, landing
 -- only on non-friendly squares  -- i.e. blanks or enemy units.
 step :: Colour -> Board -> Direction -> Coord -> [Coord]
 step c b d s = stepAny d s >>= lands (nonFriendly c b)
+{-# INLINE step #-}
 
 -- | Steps a piece over blank squares until it hits (and captures) a single
 -- enemy. This is the type of motion used by rooks, bishops and queens.
 castBasic :: Colour -> Board -> Direction -> Coord -> [Coord]
-castBasic c b d s = do candidate <- step c b d s
-                       if candidate `on` blanks b
-                         then candidate : castBasic c b d candidate
-                         else if candidate `on` material (enemy c) b
-                              then return candidate
-                              else mzero
+castBasic c b d = go 
+  where go s = do candidate <- step c b d s
+                  if candidate `on` blanks b
+                  then candidate : go candidate
+                  else if candidate `on` material (enemy c) b
+                       then return candidate
+                       else mzero
 
--- | Returns a list of each of/ the specified kind of piece on a mask of it's
+
+
+-- | Returns a list of each of the specified kind of piece on a mask of it's
 -- own.
 each :: Colour -> Piece -> Board -> [Coord]
 each c p b = split (get c p b)
+{-# INLINE each #-}

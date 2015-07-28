@@ -129,6 +129,7 @@ modify c p b m = case c of
 forEach :: Board -> (Mask -> Mask) -> Board
 forEach (Board a b c d e f g h) f' = Board (f' a) (f' b) (f' c) (f' d)
                                            (f' e) (f' f) (f' g) (f' h)
+{-# INLINE forEach #-}
 
 -- | All the positions on a board which appear on more than one mask. The
 -- following property holds:

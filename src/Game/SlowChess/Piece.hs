@@ -16,6 +16,7 @@ data Colour = White | Black deriving (Show, Eq)
 enemy :: Colour -> Colour
 enemy White = Black
 enemy Black = White
+{-# INLINE enemy #-}
 
 -- | There are different kinds of pieces on a chess board. While pieces have a
 -- colour, it isn't represented here.
@@ -44,20 +45,24 @@ rev S  = N
 rev SW = NE
 rev W  = E
 rev NW = SE
+{-# INLINE rev #-}
 
 -- | All of the directions in a list.
 allDirections :: [Direction]
 allDirections = [N, NE, E, SE, S, SW, W, NW]
+{-# INLINE allDirections #-}
 
 -- | The /forward/ direction as used by pawn motions.
 forward :: Colour -> Direction
 forward White = N
 forward Black = S
+{-# INLINE forward #-}
 
 -- | The directions the pawns of a colour can attack.
 forwardAttack :: Colour -> [Direction]
 forwardAttack White = [NE, NW]
 forwardAttack Black = [SE, SW]
+{-# INLINE forwardAttack #-}
 
 -- | Colour-relative board sides, used for knowing which side a castle move
 -- was done to.

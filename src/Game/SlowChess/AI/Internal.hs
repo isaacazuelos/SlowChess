@@ -28,3 +28,4 @@ data Player = MaximizingPlayer | MinimizingPlayer deriving (Show, Eq)
 other :: Player -> Player
 other MaximizingPlayer = MinimizingPlayer
 other MinimizingPlayer = MaximizingPlayer
+{-# INLINE other #-}

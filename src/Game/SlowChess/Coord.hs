@@ -29,11 +29,12 @@ module Game.SlowChess.Coord ( Coord
                             , hop
                             ) where
 
-import Data.Monoid ((<>))
+import           Data.Bits            (testBit)
+import           Data.Monoid          ((<>))
 
-import Game.SlowChess.Piece
+import           Game.SlowChess.Piece
 
-import qualified Game.SlowChess.Mask as M
+import qualified Game.SlowChess.Mask  as M
 
 -- | Just like a 'Mask' that contains at most one piece marked. Coords can
 -- also be /off board/ in certain circumstances --- say after a 'hop'.
@@ -63,39 +64,47 @@ data CoordName = A1 | B1 | C1 | D1 | E1 | F1 | G1 | H1
 -- | Create a coord from a nicer, human-readable name.
 coord :: CoordName -> Coord
 coord = toEnum . fromEnum
+{-# INLINE coord #-}
 
 -- | Get the nicer, human-readable form of a 'Coord'.
 name :: Coord -> CoordName
 name = toEnum . fromEnum
+{-# INLINE name #-}
 
 -- | Get a 'Mask' version of a 'Coord'.
 mask :: Coord -> M.Mask
 mask (Coord m) = m
+{-# INLINE mask #-}
 
 -- | The location that represents locations off of the board.
 -- They're all equal.
 nowhere :: Coord
 nowhere = coord OffBoard
+{-# INLINE nowhere #-}
 
 -- | Create a 'Mask' from a list of human-readable coordinate names.
 fromList :: [CoordName] -> M.Mask
-fromList = M.fromList . map fromEnum
+fromList = foldl (\ m c -> m <> mask (coord c)) 0
+{-# INLINE fromList #-}
 
 -- | Merges two 'Coord's into a 'Mask'. Since 'Coord' has at most one piece
 -- marked it can't return another 'Coord', and thus isn't a monoid like
 -- 'Mask'.
 merge :: Coord -> M.Mask -> M.Mask
 merge (Coord a) b = a <> b
+{-# INLINE merge #-}
 
 -- | Split a 'Mask' into a list of of the occupied 'Coord's.
 split :: M.Mask -> [Coord]
-split m = map (toEnum . fromEnum) (M.toList m)
+split m = map toEnum $ filter (testBit m) [0..63]
+{-# INLINE split #-}
 
 -- | Are the tiles of the 'Coord' marked on the 'Mask'?
 -- Returns 'False' if the Coord is OffBoard since that already means the piece
 -- is off the board.
 on :: Coord -> M.Mask -> Bool
 on (Coord c) m = c `M.submask` m && c /= 0
+{-# INLINE on #-}
 
 -- |  Hop moves the piece in the specified direction.
 --

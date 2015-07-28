@@ -84,7 +84,8 @@ instance Show Game where
     where showCastleOptions = "<unimplemented>"
 
 unfoldFuture :: (Game -> [Game]) -> Game -> Game
-unfoldFuture f g = g {future = map (unfoldFuture f) (f g) }
+unfoldFuture f = go
+  where go g = g { future = map go (f g) }
 
 -- | Update most of the typical feilds in the obvious way.
 next :: Game -> Ply -> Board -> Game

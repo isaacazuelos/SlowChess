@@ -90,6 +90,7 @@ maskFromIndex :: Int -> Mask
 maskFromIndex i = if (i >= 0) && (i < 64)
                   then Mask (2^i)
                   else error "Index out of range for chess board."
+{-# INLINE maskFromIndex #-}
 
 -- | Build a mask from a list of square indexes.
 --
@@ -103,11 +104,13 @@ fromList = foldr ((<>) . maskFromIndex) mempty
 --
 -- @fromList . toList = toList . fromList = id@
 toList :: Mask -> [Int]
-toList m = filter (\i -> mempty /= m .&. maskFromIndex i) [0..63]
+toList m = filter (testBit m) [0..63]
+{-# INLINE toList #-}
 
 -- | All the squares which are occupied on exactly both of the inputs.
 both :: Mask -> Mask -> Mask
 both = (.&.)
+{-# INLINE both #-}
 
 -- | Unmark all the position in the first mask that are held by the second.
 --
@@ -116,6 +119,7 @@ both = (.&.)
 -- > 1 0 1         0 0 0   1 0 1
 minus :: Mask -> Mask -> Mask
 minus a b = a .&. complement b
+{-# INLINE minus #-}
 
 -- | Inverts which positions are marked and which are not.
 --
@@ -124,6 +128,7 @@ minus a b = a .&. complement b
 -- >        1 0 1   1 0 1
 invert :: Mask -> Mask
 invert = complement
+{-# INLINE invert #-}
 
 -- | Is one mask contained in the other?
 --
@@ -132,10 +137,12 @@ invert = complement
 -- > 0 0 0           1 0 1
 submask :: Mask -> Mask -> Bool
 submask a b = b == a <> b
+{-# INLINE submask #-}
 
 -- | Count the number of pieces on the mask.
 count :: Mask -> Int
 count = popCount
+{-# INLINE count #-}
 
 -- ** Movement
 
@@ -157,6 +164,7 @@ moveable S  = (.&.) $ fromList [8..63]
 moveable SW = moveable S . moveable E
 moveable W  = (.&.) $ fromList ([0..63] \\ [0,8,16,24,32,40,48,56])
 moveable NW = moveable N . moveable W
+{-# INLINE moveable #-}
 
 -- |  Hop moves the pieces of a mask in the specified direction.
 --
@@ -177,6 +185,7 @@ hop S  = (`shiftR` 8) . moveable S
 hop SW = hop S . hop W
 hop W  = (`shiftR` 1) . moveable W
 hop NW = hop N . hop W
+{-# INLINE hop #-}
 
 -- * Printing Masks
 

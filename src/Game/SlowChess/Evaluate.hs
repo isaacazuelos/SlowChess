@@ -20,6 +20,7 @@ import           Game.SlowChess.Piece
 -- Values taken from https://chessprogramming.wikispaces.com/Point+Value
 eval :: Game -> Score
 eval g = if checkmate g then 1/0 else countPieces g
+{-# INLINE eval #-}
 
 countPieces :: Game -> Score
 countPieces g = fromIntegral $ sum counts
@@ -31,3 +32,4 @@ countPieces g = fromIntegral $ sum counts
                  , 525  * count (get c Rook b)
                  , 1000 * count (get c Queen b)
                  ]
+{-# INLINE countPieces #-}
