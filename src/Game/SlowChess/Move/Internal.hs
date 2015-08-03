@@ -30,11 +30,11 @@ import           Game.SlowChess.Piece
 --   * When a 'Move' happens, the source becomes blank and the target is
 --     overwritten with the piece moved.
 data Ply =
-      Move      Colour Piece Coord {-# UNPACK #-} !Coord -- ^ player piece source target
-    | Promotion Colour Piece Coord Coord -- ^ player piece source target
-    | EnPassant Colour Coord Coord Coord -- ^ player source target cap
-    | StepTwice Colour Coord Coord Coord -- ^ player source target cap
-    | Castle    Colour Side              -- ^ player side
+      Move      !Colour !Piece !Coord !Coord -- ^ player piece source target
+    | Promotion !Colour !Piece !Coord !Coord -- ^ player piece source target
+    | EnPassant !Colour !Coord !Coord !Coord -- ^ player source target cap
+    | StepTwice !Colour !Coord !Coord !Coord -- ^ player source target cap
+    | Castle    !Colour !Side                -- ^ player side
       deriving ( Show, Eq )
 
 -- | Move out in straight lines along the directions until either the pieces
@@ -45,7 +45,7 @@ cast ds p c b = do
     direction <- ds
     source    <- each c p b
     target    <- castBasic c b direction source
-    return $ Move c p source target
+    return $! Move c p source target
 
 -- | Where the target square of a ply is, assuming that makes sense for the
 -- type of movement.
