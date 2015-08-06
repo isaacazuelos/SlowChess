@@ -11,35 +11,57 @@ module Game.SlowChess.AI.Negascout where
 import           Game.SlowChess.AI.Internal
 
 -- | Search states, as used by negascout.
-data GameTree g => SearchState g a = State { alpha  :: Score
-                                           , beta   :: Score
-                                           , depth  :: Int
-                                           , player :: Player
-                                           , value  :: a
-                                           } deriving (Show, Eq)
+data State = S
+    { depth  :: Int
+    , alpha  :: Score
+    , beta   :: Score
+    , player :: Player
+    , score  :: Score
+    } deriving (Show, Eq)
 
 -- | Positive infinity as a score.
 infinity :: Score
 infinity = 1 / 0
 
--- function pvs(node, depth, α, β, color)
---     if node is a terminal node or depth = 0
---         return color × the heuristic value of node
---     for each child of node
---         if child is not first child
---             score := -pvs(child, depth-1, -α-1, -α, -color)       (* search with a null window *)
---             if α < score < β                                      (* if it failed high,
---                 score := -pvs(child, depth-1, -β, -score, -color)        do a full re-search *)
---         else
---             score := -pvs(child, depth-1, -β, -α, -color)
---         α := max(α, score)
---         if α ≥ β
---             break                                            (* beta cut-off *)
---     return α
+-- | Turns a player into the sign needed by the algorithm.
+val :: Player -> Score
+val MaximizingPlayer = 1
+val MinimizingPlayer = -1
 
+nega :: GameTree g => State -> g -> Score
+nega s node =
+    if terminal node || depth s == 0
+        then val (player s) * evaluate node
+        else
+          let first:rest = children node in
+          let startScore = -(nega s first) in
+          let s' = S (depth s - 1) (-(alpha s) - 1) (-alpha s) (other (player s)) (error "huh?") in
+          if null rest
+              then startScore
+              else alpha $ for rest s' body
+                 where body = undefined
+--         score = -pvs(child, depth-1, -alpha-1, -alpha, -color)
+--         if alpha < score < beta
+--             score = -pvs(child, depth-1, -beta, -score, -color)
+--         alpha = max(alpha, score)
+--         if alpha >= beta:
+--             break
 
+data Continue_ a b = Break a | Cont b deriving (Show, Eq)
+
+type Continue s = Continue_ s s
+
+value :: Continue s -> s
+value (Cont  s) = s
+value (Break s) = s
+
+for :: [a] -> s -> (a -> s -> Continue s) -> s
+for col state f = value (go col (Cont state))
+  where go  [] s = s
+        go  _ (Break s) = Break s
+        go (c:cs) (Cont s) = go cs (f c s)
 
 
 -- | Alpha Beta Pruning tree search.
--- search :: GameTree g => Int -> Player -> g -> Score
--- search d p g = negascout (startState g d p) g
+search :: GameTree g => Int -> Player -> g -> Score
+search = undefined
