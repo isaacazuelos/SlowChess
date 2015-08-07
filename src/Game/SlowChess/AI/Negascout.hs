@@ -8,16 +8,24 @@
 
 module Game.SlowChess.AI.Negascout where
 
+import           Control.Monad
+import           Control.Monad.Trans.State.Strict
+import           Data.Functor.Identity
+
 import           Game.SlowChess.AI.Internal
 
 -- | Search states, as used by negascout.
-data State = S
-    { depth  :: Int
-    , alpha  :: Score
-    , beta   :: Score
-    , player :: Player
-    , score  :: Score
-    } deriving (Show, Eq)
+data SearchState = SearchState { _depth  :: Int
+                               , _alpha  :: Score
+                               , _beta   :: Score
+                               , _score  :: Score
+                               , _player  :: Player
+                               } deriving (Show, Eq)
+
+-- newtype Search a = Search { runSearch :: State SearchState a }
+                --    deriving ( Functor, Applicative, Monad )
+
+type Search = StateT SearchState Identity
 
 -- | Positive infinity as a score.
 infinity :: Score
@@ -28,39 +36,48 @@ val :: Player -> Score
 val MaximizingPlayer = 1
 val MinimizingPlayer = -1
 
-nega :: GameTree g => State -> g -> Score
-nega s node =
-    if terminal node || depth s == 0
-        then val (player s) * evaluate node
-        else
-          let first:rest = children node in
-          let startScore = -(nega s first) in
-          let s' = S (depth s - 1) (-(alpha s) - 1) (-alpha s) (other (player s)) (error "huh?") in
-          if null rest
-              then startScore
-              else alpha $ for rest s' body
-                 where body = undefined
---         score = -pvs(child, depth-1, -alpha-1, -alpha, -color)
---         if alpha < score < beta
---             score = -pvs(child, depth-1, -beta, -score, -color)
---         alpha = max(alpha, score)
---         if alpha >= beta:
---             break
 
-data Continue_ a b = Break a | Cont b deriving (Show, Eq)
+nega :: GameTree g => (g, Int, Score, Score, Player) -> Score
+nega (node, d, α, β, p) =
+    if terminal node || d == 0
+    then val p * evaluate node
+    else getAlpha startState $ do
+        let (first:rest) = children node
+        depth  <- gets _depth
+        player <- gets _player
+        setScore $ negate (nega (first, depth-1, -β, -α, other player))
+        fancyFor rest $ \ child -> do
+            alpha <- gets _alpha
+            beta  <- gets _beta
+            setScore $ negate (nega (child, depth-1, -(alpha-1), -alpha, other player))
+            score <- gets _score
+            when (alpha < score && score < beta) $
+                setScore $ -nega(child, depth-1, -beta, -score, other player)
+            score' <- gets _score
+            setAlpha $ max alpha score'
+            alpha' <- gets _alpha
+            return (alpha' < beta) -- Do we break?
+  where startState = SearchState { _depth = d
+                                 , _player = p
+                                 , _alpha = α
+                                 , _beta  = β
+                                 , _score = -infinity
+                                 }
 
-type Continue s = Continue_ s s
+getAlpha :: SearchState -> State SearchState a -> Score
+getAlpha start s = _alpha . snd $ runState s start
 
-value :: Continue s -> s
-value (Cont  s) = s
-value (Break s) = s
+setAlpha :: Score -> State SearchState ()
+setAlpha alpha' = modify (\s -> s { _alpha = alpha' })
 
-for :: [a] -> s -> (a -> s -> Continue s) -> s
-for col state f = value (go col (Cont state))
-  where go  [] s = s
-        go  _ (Break s) = Break s
-        go (c:cs) (Cont s) = go cs (f c s)
+setScore :: Score -> State SearchState ()
+setScore score' = modify (\s -> s { _score = score' })
 
+fancyFor :: [g] -> (g -> Search Bool) -> Search Bool
+fancyFor [] f = error "fuck"
+fancyFor (g:[]) f = f g
+fancyFor (g:gs) f = case runState (f g) of
+                        (x,y) -> _    
 
 -- | Alpha Beta Pruning tree search.
 search :: GameTree g => Int -> Player -> g -> Score

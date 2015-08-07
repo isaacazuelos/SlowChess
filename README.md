@@ -24,4 +24,3 @@ To Do List
 * Game AI — Negascout?
 * Game UI — The `/cli/` directory and executable are for this.
 * Algebraic Chess Notation support — It might be nice to manipulate games.
-* Build a REST API for chess games
