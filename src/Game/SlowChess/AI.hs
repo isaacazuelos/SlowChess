@@ -16,7 +16,7 @@ module Game.SlowChess.AI ( Player ( MaximizingPlayer
                          ) where
 
 import           Game.SlowChess.AI.Internal
-import           Game.SlowChess.AI.Negamax    (search)
+import           Game.SlowChess.AI.Negascout  (search)
 import           Game.SlowChess.Evaluate
 import           Game.SlowChess.Game
 import           Game.SlowChess.Game.Internal
