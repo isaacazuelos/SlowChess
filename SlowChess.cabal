@@ -20,11 +20,13 @@ source-repository head
 
 library
     build-depends:
-        base >=4 && <5
+        base >=4 && <5,
+        transformers
     exposed-modules:
         Game.SlowChess.AI
         Game.SlowChess.AI.Internal
         Game.SlowChess.AI.Negamax
+        Game.SlowChess.AI.Negascout
         Game.SlowChess.Board
         Game.SlowChess.Coord
         Game.SlowChess.Evaluate
@@ -61,7 +63,6 @@ executable prof
     hs-source-dirs: src prof
     ghc-options:
         -Wall
-        -O2
         -fprof-auto
         "-with-rtsopts=-Pa"
 

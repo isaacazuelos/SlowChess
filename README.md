@@ -1,7 +1,7 @@
 SlowChess
 =========
 
-A chess engine in Haskell. Built to learn more about Haskell and it's tooling.
+A chess engine in Haskell. Built to learn more about Haskell tooling.
 
 It's still in development.
 
@@ -21,7 +21,6 @@ To Do List
 * ~~Sketch tools for working with game trees.~~
 * ~~Game AI — Negamax?~~
 * ~~Profiling — I'd like to learn more about profiling in Haskell.~~
-* Game AI — Negascout?
+* ~~Game AI — Negascout~~
 * Game UI — The `/cli/` directory and executable are for this.
 * Algebraic Chess Notation support — It might be nice to manipulate games.
-* Build a REST API for chess games
