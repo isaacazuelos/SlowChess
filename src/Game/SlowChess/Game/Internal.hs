@@ -36,6 +36,7 @@ module Game.SlowChess.Game.Internal ( Game ( Game
                                     , defaultStatus
                                     , unfoldFuture
                                     , next
+                                    , finishTurn
                                       -- * Access status flags
                                     , fifty
                                     , check
@@ -74,8 +75,9 @@ data Game = Game { player :: !Colour
 -- | Prints a bunch of information about a Game's state, Information about
 -- the future is left out to prevent
 instance Show Game where
-  show g = "\nplayer:"   ++ show (player g) ++
-           "\nboard:"    ++ show (board  g) ++
+  show g = "\nboard:"    ++ show (board  g) ++
+           "\nplayer:"   ++ show (player g) ++
+           "\nlast ply:" ++ show (ply    g) ++
            "\nstats:"    ++
            "\n  fifty move rule: " ++ show (fifty g)         ++
            "\n  castleOptions: "   ++ showCastleOptions      ++
@@ -83,7 +85,13 @@ instance Show Game where
            "\n  checkmate: "       ++ show (checkmate g)     ++
            "\n  drawn: "           ++ show (drawn g)         ++
            "\n  draw available: "  ++ show (drawAvailable g)
-    where showCastleOptions = "<unimplemented>"
+    where showCastleOptions = show options
+          options = do c <- [White, Black]
+                       s <- [Kingside, Queenside]
+                       if hasCastleOption c s g
+                           then return (c, s)
+                           else []
+
 
 -- | Build a game tree, using a given function to generate each game's future.
 unfoldFuture :: (Game -> [Game]) -> Game -> Game
@@ -92,10 +100,14 @@ unfoldFuture f = go
 
 -- | Update most of the typical feilds in the obvious way.
 next :: Game -> Ply -> Board -> Game
-next g p b = g { player = enemy (player g)
+next g p b = g { player = player g
                , board  = b
                , ply    = Just p
                }
+
+-- | Finish a turn by swapping the current player.
+finishTurn :: Game -> Game
+finishTurn g = g { player = enemy (player g)}
 
 -- | GameFlags are various status bits for the game.
 -- 01234567 89abcdef

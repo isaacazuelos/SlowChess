@@ -84,12 +84,12 @@ wrapSimple g simple = map (apply g) $ simple (player g) (board g)
 apply :: Game -> Ply -> Game
 -- We only cover the constructors we need, i.e. the ones used in this module.
 apply g@(Game { board = b }) m@(Move c p s t) = g'
-  where g' = g { player = enemy c
+  where g' = g { player = c
                , board  = update c p b (mask t) (mask s)
                , ply    = Just m
                }
 apply g@(Game { board = b }) m@(StepTwice c s t _) = g'
-  where g' = g { player = enemy (player g)
+  where g' = g { player = player g
                , board  = update c Pawn b (mask t) (mask s)
                , ply    = Just m
                }

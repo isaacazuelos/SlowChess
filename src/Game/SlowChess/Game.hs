@@ -15,8 +15,6 @@ module Game.SlowChess.Game ( -- * Constructors
                            , toDepth
                            ) where
 
-import           Data.Monoid                   ((<>))
-
 import           Game.SlowChess.Board          hiding (update)
 import           Game.SlowChess.Game.Fifty
 import           Game.SlowChess.Game.Internal
@@ -50,21 +48,24 @@ toDepth n g = g { future = map (toDepth (pred n)) (future g) }
 -- | Generate the moves which might be legal, apart from the rules checked in
 -- 'updates'.
 genMoves :: Game -> [Game]
-genMoves g = moves g <> castle g <> enPassant g
+genMoves g = moves g ++ castle g ++ enPassant g
 
 -- | Do all the updates. This means computing the checkmate, check, and fifty
--- move rule status of a game.
+-- move rule status of a game. Note that updates like this are computed
+-- /before/ the turn is technically over, so the colour of the player hasn't
+-- moved over yet.
 update :: Game -> Game
 update = updateCheckmate . updateCheck . fiftyMoveRule
 
 -- | All legal futures for a game. This applies /all/ of the rules. It doesn't
 -- really deal with draws though.
 legal :: Game -> [Game]
-legal = filter (not . check) . map update . genMoves
+legal = filter (not . check) .  map (finishTurn . update) . genMoves
 
 -- | Is the game won? A game is in checkmate if the current player's king will
 -- remain in check regardless of how they play.
 updateCheckmate :: Game -> Game
+-- Note that the update
 updateCheckmate g@(Game { board = b, player = c }) = setCheckmate g cm
   where cm = check g && kingMovements `submask` attackable
         kingMovements = targets (moveKings c b)

@@ -50,18 +50,18 @@ instance Show Board where
  show b = if conflicts b /= 0
               then "Invalid Board."
               else buildBoardString (concat
-                    [ boardStringTiles "R" $ get Black Rook   b
-                    , boardStringTiles "H" $ get Black Knight b
-                    , boardStringTiles "B" $ get Black Bishop b
-                    , boardStringTiles "Q" $ get Black Queen  b
-                    , boardStringTiles "K" $ get Black King   b
-                    , boardStringTiles "P" $ get Black Pawn   b
-                    , boardStringTiles "r" $ get White Rook   b
-                    , boardStringTiles "h" $ get White Knight b
-                    , boardStringTiles "b" $ get White Bishop b
-                    , boardStringTiles "q" $ get White Queen  b
-                    , boardStringTiles "k" $ get White King   b
-                    , boardStringTiles "p" $ get White Pawn   b
+                    [ boardStringTiles "♜" $ get Black Rook   b
+                    , boardStringTiles "♞" $ get Black Knight b
+                    , boardStringTiles "♝" $ get Black Bishop b
+                    , boardStringTiles "♛" $ get Black Queen  b
+                    , boardStringTiles "♚" $ get Black King   b
+                    , boardStringTiles "♟" $ get Black Pawn   b
+                    , boardStringTiles "♖" $ get White Rook   b
+                    , boardStringTiles "♘" $ get White Knight b
+                    , boardStringTiles "♗" $ get White Bishop b
+                    , boardStringTiles "♕" $ get White Queen  b
+                    , boardStringTiles "♔" $ get White King   b
+                    , boardStringTiles "♙" $ get White Pawn   b
                     ])
 
 -- | All of the positions held by pieces of a colour.

@@ -9,7 +9,7 @@
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Game.SlowChess.AI ( suggest ) where
+module Game.SlowChess.AI ( Score, suggest ) where
 
 import           Game.SlowChess.AI.Internal
 import           Game.SlowChess.Evaluate

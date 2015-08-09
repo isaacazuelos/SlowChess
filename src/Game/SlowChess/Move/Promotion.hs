@@ -52,7 +52,7 @@ promote g pt = case ply g of
                                   else []
     _ -> []
   where newBoard t  = update (player g) (toPiece pt) (board g) (mask t) 0
-        newPly      = Promotion (enemy (player g)) (toPiece pt)
+        newPly      = Promotion (player g) (toPiece pt)
         newGame s t = return $ g { ply = Just $ newPly s t
                                  , board = newBoard t
                                  }
