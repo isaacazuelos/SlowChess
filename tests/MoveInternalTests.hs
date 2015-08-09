@@ -8,7 +8,6 @@ import           Data.Monoid                  ((<>))
 
 import           Test.Tasty
 import           Test.Tasty.HUnit
-import           Test.Tasty.QuickCheck
 
 import           Data.List                    ((\\))
 

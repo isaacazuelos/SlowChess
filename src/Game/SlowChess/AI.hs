@@ -9,14 +9,9 @@
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Game.SlowChess.AI ( Player ( MaximizingPlayer
-                                  , MinimizingPlayer
-                                  )
-                         , suggest
-                         ) where
+module Game.SlowChess.AI ( suggest ) where
 
 import           Game.SlowChess.AI.Internal
-import           Game.SlowChess.AI.Negascout  (search)
 import           Game.SlowChess.Evaluate
 import           Game.SlowChess.Game
 import           Game.SlowChess.Game.Internal
@@ -31,12 +26,15 @@ instance GameTree Game where
     evaluate = eval
 
 -- | Suggest one of the game's children
-suggest :: Int -> Player -> Game -> Maybe Game
-suggest n p g = case suggestions n p g of
-                  []  -> Nothing
-                  x:_ -> Just x
+suggest :: Algorithm -> Int -> Game -> Maybe Game
+suggest a n g = case suggestions a n MaximizingPlayer g of
+    []  -> Nothing
+    x:_ -> Just x
+
+-- | The type used by all the tree serarch algorithms.
+type Algorithm = Int -> Player -> Game -> Score
 
 -- | All games in a game's future, sorted by their score when searched to
 -- the passed depth.
-suggestions :: Int -> Player -> Game -> [Game]
-suggestions n p = sortBy (comparing $ search n p) . children
+suggestions :: Algorithm -> Int -> Player -> Game -> [Game]
+suggestions a n p = sortBy (comparing $ a n p) . children

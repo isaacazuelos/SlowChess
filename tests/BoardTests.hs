@@ -10,13 +10,12 @@ import           Test.Tasty.QuickCheck
 import           Data.Monoid           (mempty)
 
 import           Game.SlowChess.Board
-import           Game.SlowChess.Mask   (squish, invert)
+import           Game.SlowChess.Mask   (squish, invert, minus)
 
 tests = testGroup "Board Tests" [ testBlank
                                 , testGetSet
                                 , testSetGet
                                 , testUpdate
-                                , testConstUpdate
                                 , testMaterial
                                 , testBlanks
                                 ]
@@ -30,13 +29,14 @@ testGetSet = testProperty "Getting after setting does nothing"
 testSetGet = testProperty "Setting after getting does nothing"
     (\ c p b -> set c p b (get c p b) == b)
 
-testUpdate = testGroup "Test update" [ testUpdateId ]
+testUpdate = testGroup "Test update" [ testUpdateId,testUpdateGet ]
 
 testUpdateId = testProperty "Updating nothing does nothing"
     (\ c p b -> update c p b 0 0 == b)
 
-testConstUpdate = testProperty "Update is just wipe and set"
-    (\ c p b m1 m2 -> update c p b m1 m2 == set c p (wipe b m2) (squish m1 (get c p b)))
+testUpdateGet = testProperty "get after updat does what you expect."
+    (\ c p b m1 m2 -> get c p (update c p b m1 m2) ==
+                        get c p b `squish` m1 `minus` m2)
 
 testMaterial = testProperty "Material after setting on blank"
     (\ c p m -> material c (set c p blank m) == m)
