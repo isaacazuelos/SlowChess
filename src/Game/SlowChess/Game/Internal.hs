@@ -41,14 +41,12 @@ module Game.SlowChess.Game.Internal ( Game ( Game
                                     , fifty
                                     , check
                                     , checkmate
-                                    , drawn
-                                    , drawAvailable
+                                    , draw
                                       -- * Set status flags
                                     , setFifty
                                     , setCheck
                                     , setCheckmate
-                                    , setDrawn
-                                    , setDrawAvailable
+                                    , setDraw
                                       -- Castling flags
                                     , castleOptions
                                     , enableAllCastleOptions
@@ -83,8 +81,7 @@ instance Show Game where
            "\n  castleOptions: "   ++ showCastleOptions      ++
            "\n  check: "           ++ show (check g)         ++
            "\n  checkmate: "       ++ show (checkmate g)     ++
-           "\n  drawn: "           ++ show (drawn g)         ++
-           "\n  draw available: "  ++ show (drawAvailable g)
+           "\n  drawn: "           ++ show (draw g)
     where showCastleOptions = show options
           options = do c <- [White, Black]
                        s <- [Kingside, Queenside]
@@ -111,7 +108,7 @@ finishTurn g = g { player = enemy (player g)}
 
 -- | GameFlags are various status bits for the game.
 -- 01234567 89abcdef
--- ffffffff abcdCMDO
+-- ffffffff abcdCMD?
 --
 -- a = White Kingside  castle still legal
 -- b = Black Kingside  castle still legal
@@ -120,7 +117,7 @@ finishTurn g = g { player = enemy (player g)}
 -- C = Check
 -- M = Checkmate
 -- D = Drawn game
--- O = Draw available
+-- ? = Unused
 newtype GameStatus = Status Word16 deriving ( Bits, Eq, Show )
 
 -- | A default game's status, where castling is disallowed, the game is not
@@ -130,7 +127,7 @@ defaultStatus = Status 0
 
 -- | A mask used to isolate the lower 8 bits used
 fiftyMask :: Bits a => a
-fiftyMask = unsafeShiftL (complement zeroBits) 8
+fiftyMask = foldl setBit zeroBits [0x0..0x7]
 
 -- | The fifty move rule count of the game.
 fifty :: Game -> Int
@@ -169,12 +166,8 @@ checkmate :: Game -> Bool
 checkmate g = testBit (status g) 0xD
 
 -- | Is a game drawn?
-drawn :: Game -> Bool
-drawn g = testBit (status g) 0xE
-
--- | Can a palyer claim a draw?
-drawAvailable :: Game -> Bool
-drawAvailable g = testBit (status g) 0xF
+draw :: Game -> Bool
+draw g = testBit (status g) 0xE
 
 -- | A generic bit setting function, which reaches inside a game to flip the
 -- appropriate bits.
@@ -196,12 +189,8 @@ setCheckmate :: Game -> Bool -> Game
 setCheckmate = setStatusBit 0xD
 
 -- | Set if a game is a draw
-setDrawn :: Game -> Bool -> Game
-setDrawn = setStatusBit 0xE
-
--- | Set weather a draw is available to claim.
-setDrawAvailable :: Game -> Bool -> Game
-setDrawAvailable = setStatusBit 0xF
+setDraw :: Game -> Bool -> Game
+setDraw = setStatusBit 0xE
 
 -- | Enable all castle options, regardless of their current settings.
 enableAllCastleOptions :: Game -> Game

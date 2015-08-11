@@ -21,6 +21,7 @@ source-repository head
 library
     build-depends:
         base >=4 && <5,
+        haskeline,
         transformers
     exposed-modules:
         Game.SlowChess.AI
@@ -59,7 +60,9 @@ executable slowchess
 
 executable prof
     build-depends:
-        base >=4 && <5
+        base >=4 && <5,
+        haskeline,
+        transformers
     main-is: Main.hs
     default-language: Haskell2010
     hs-source-dirs: src prof

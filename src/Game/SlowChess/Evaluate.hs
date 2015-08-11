@@ -19,17 +19,19 @@ import           Game.SlowChess.Piece
 -- | Evaluate a game. Right now it's a pretty simple pice counting.
 -- Values taken from https://chessprogramming.wikispaces.com/Point+Value
 eval :: Game -> Score
-eval g = if checkmate g then 1/0 else countPieces g
-
+eval g -- if checkmate g then 1/0 else countPieces g
+    | checkmate g = 1/0
+    | check     g = 2500
+    | draw      g = -500
+    | otherwise   = countPieces g
 -- | Count the number of pieces, and give each a score. See 'eval' for
 -- details.
 countPieces :: Game -> Score
-countPieces g = fromIntegral $ sum counts
+countPieces g = fromIntegral counts
   where c = player g
         b = board  g
-        counts = [ 100  * count (get c Pawn b)
-                 , 350  * count (get c Knight b)
-                 , 350  * count (get c Bishop b)
-                 , 525  * count (get c Rook b)
-                 , 1000 * count (get c Queen b)
-                 ]
+        counts = (100  * count (get c Pawn b))
+               + (350  * count (get c Knight b))
+               + (350  * count (get c Bishop b))
+               + (525  * count (get c Rook b))
+               + (1000 * count (get c Queen b))

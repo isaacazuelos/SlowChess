@@ -30,10 +30,13 @@ module Game.SlowChess.Move ( -- * Move generation
                            , movePawns
                            ) where
 
-import           Data.List                     (foldl')
+
+import           Data.List                     (foldl', sortBy)
+import           Data.Ord                      (comparing)
 
 import           Game.SlowChess.Board
 import           Game.SlowChess.Coord
+import           Game.SlowChess.Evaluate
 import           Game.SlowChess.Game.Internal
 import           Game.SlowChess.Mask           (Mask, squish)
 import           Game.SlowChess.Move.Internal
@@ -45,13 +48,12 @@ import           Game.SlowChess.Piece
 -- | Uses the basic movment rules to generate all a bunch of movement
 -- possibilites.
 moves :: Game -> [Game]
-moves g = (wrapSimple g movePawns >>= promotions) ++
-            concat [ wrapSimple g moveKings
-                   , wrapSimple g moveQueens
-                   , wrapSimple g moveKnights
-                   , wrapSimple g moveBishops
-                   , wrapSimple g moveRooks
-                   ]
+moves g = sortBy (comparing eval) $ (wrapSimple g movePawns >>= promotions)
+                                 ++ wrapSimple g moveKnights
+                                 ++ wrapSimple g moveBishops
+                                 ++ wrapSimple g moveRooks
+                                 ++ wrapSimple g moveQueens
+                                 ++ wrapSimple g moveKings
 
 -- | All the squares attackable by a colour on a board.
 attacks :: Colour -> Board -> Mask

@@ -65,7 +65,6 @@ legal = filter (not . check) .  map (finishTurn . update) . genMoves
 -- | Is the game won? A game is in checkmate if the current player's king will
 -- remain in check regardless of how they play.
 updateCheckmate :: Game -> Game
--- Note that the update
 updateCheckmate g@(Game { board = b, player = c }) = setCheckmate g cm
   where cm = check g && kingMovements `submask` attackable
         kingMovements = targets (moveKings c b)
