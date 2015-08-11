@@ -13,7 +13,7 @@ import           System.Console.Haskeline
 
 import           Control.Monad
 import           Control.Monad.IO.Class
-import           Control.Monad.Trans.Error
+import           Control.Monad.Trans.Except
 
 import qualified Game.SlowChess.AI            as AI
 import qualified Game.SlowChess.AI.Negamax    as Max   (search)
@@ -57,12 +57,12 @@ gameStarter :: Config -> InputT IO ()
 gameStarter config = do
     whitePlayer <- getPlayer "white" config
     blackPlayer <- getPlayer "black" config
-    result <- runErrorT $ playGame whitePlayer blackPlayer start
+    result <- runExceptT $ playGame whitePlayer blackPlayer start
     case result of
         Left msg -> outputStrLn msg
         Right g  -> error $ "the game isn't over: " ++ show g
 
-type Player = Game -> ErrorT Result (InputT IO) Game
+type Player = Game -> ExceptT Result (InputT IO) Game
 
 type Result = String
 
@@ -80,10 +80,10 @@ humanPlayer = error "Human players not yet supported."
 
 cpuPlayer :: Config -> Player
 cpuPlayer c g = case AI.suggest (algorithm c) (depth c) g of
-    Nothing -> throwError "No legal game"
+    Nothing -> throwE "No legal game"
     Just g' -> return g'
 
-playGame :: Player -> Player -> Game -> ErrorT Result (InputT IO) Game
+playGame :: Player -> Player -> Game -> ExceptT Result (InputT IO) Game
 playGame white black = go
   where printGame = liftIO . putStr . show
         go g = do printGame g
@@ -92,5 +92,5 @@ playGame white black = go
                   g'' <- black g'
                   if checkmate g'' || draw g''
                       then -- TODO: Write a better message.
-                           throwError "The game is over."
+                           throwE "The game is over."
                       else go g''

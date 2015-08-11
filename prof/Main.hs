@@ -2,7 +2,7 @@ module Main where
 
 import           System.Console.Haskeline
 
-import           Control.Monad.Trans.Error
+import           Control.Monad.Trans.Except
 
 import           Game.SlowChess.Game
 import           Game.SlowChess.REPL
@@ -10,7 +10,7 @@ import           Game.SlowChess.REPL
 -- TODO: Have command line args for setting depth, algorithm, etc.
 main :: IO ()
 main = do
-    result <- runInputT intputSettings . runErrorT $ game
+    result <- runInputT intputSettings . runExceptT $ game
     case result of
         Left msg -> print msg
         Right g  -> error $ "unfinished game: " ++ show g
