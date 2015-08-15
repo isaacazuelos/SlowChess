@@ -15,10 +15,14 @@ module Game.SlowChess.Game ( -- * Constructors
                            , toDepth
                            ) where
 
+import Data.List
+import Data.Ord
+
 import           Game.SlowChess.Board          hiding (update)
 import           Game.SlowChess.Game.Fifty
 import           Game.SlowChess.Game.Internal
 import           Game.SlowChess.Mask
+import           Game.SlowChess.Evaluate
 import           Game.SlowChess.Move
 import           Game.SlowChess.Move.Castle
 import           Game.SlowChess.Move.EnPassant
@@ -31,8 +35,9 @@ start = enableAllCastleOptions (challange White starting)
 -- | Builds a challange board. Castling isn't enabled, but you can change
 -- that with 'enableAllCastleOptions'.
 challange :: Colour -> Board -> Game
-challange c b = update (unfoldFuture legal g)
-  where g = Game { player = c
+challange c b = update (unfoldFuture sortedLegals g)
+  where sortedLegals = sortBy (flip (comparing eval)) . legal
+        g = Game { player = c
                  , status = defaultStatus
                  , board  = b
                  , ply    = Nothing

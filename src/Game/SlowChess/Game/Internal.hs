@@ -68,7 +68,15 @@ data Game = Game { player :: !Colour
                  , board  :: {-# UNPACK #-} !Board
                  , ply    :: Maybe Ply
                  , future :: [Game]
-                 } deriving ( Eq )
+                 }
+
+-- Games with the same board, status, and ply are equal. We don't need to
+-- check the futures, since futures are dependent on the other values.
+instance Eq Game where
+    (==) a b = player a == player b
+            && status a == status b
+            && board  a == board  b
+            && ply    a == ply    b
 
 -- | Prints a bunch of information about a Game's state, Information about
 -- the future is left out to prevent

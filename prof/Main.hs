@@ -15,6 +15,6 @@ main = do
         Left msg -> print msg
         Right g  -> error $ "unfinished game: " ++ show g
   where intputSettings = setComplete noCompletion defaultSettings
-        config = defaultConfig { depth = 10, algoName = Negascout }
+        config = defaultConfig { depth = 8, algoName = Negascout }
         defaultCPU = cpuPlayer config
         game = playGame defaultCPU defaultCPU start
