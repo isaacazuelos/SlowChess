@@ -3,7 +3,8 @@ SlowChess
 
 A chess engine in Haskell. Built to learn more about Haskell tooling.
 
-It's still in development.
+While I haven't *completely* abandoned this, the project is on a bit of a haitus. 
+It's still in development, just not actively so.
 
 To Do List
 ----------
