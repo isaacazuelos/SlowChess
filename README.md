@@ -1,6 +1,6 @@
 SlowChess
 =========
 
-A chess engine in Haskell. Built to learn more about Haskell tooling.
+A chess engine in Haskell. Built to learn more about Haskell.
 
-A rewrite of this is happening as [`rook`](https://github.com/isaacazuelos/rook)
+A rewrite was attempted as [`rook`](https://github.com/isaacazuelos/rook), but never got as far as this attempt.
